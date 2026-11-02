@@ -24,6 +24,12 @@ Every turn, players choose an attack spell corresponding to a key mathematical t
 * ⚡ **Critical Strike (`Algebraic Linear Equations`):** Solve for $x$ in linear and quadratic equations ($ax \pm b = c$, variables on both sides) for massive critical strikes.
 * ❄️ **Time Warp (`Pattern Sequences`):** Identify geometric and arithmetic number patterns to freeze the boss for a free turn.
 
+### ⚡ TEGAS Battle Rush & Engagement Mechanics
+
+* **⚡ TEGAS Hypercharge Mode (3x+ Streak):** Hitting a 3-answer streak enters high-voltage Hypercharge mode with glowing red/yellow neon borders, screen aura, synthesized soaring arpeggios, and a **1.5x Damage & Score Multiplier**.
+* **⚠️ Boss Enraged Phase (<35% HP):** When a boss's HP drops below 35%, they pulse with a fiery red aura and become Enraged! Boss attack power increases by 40% and question timers accelerate by 20%, building intense climax tension. Defeating an enraged boss awards a +500 Slayer Bonus!
+* **📳 Juicier Haptic & Visual Feedback:** Dynamic multi-axis screen shakes and mobile vibration triggers on attacks, crits, and enrages via `navigator.vibrate`.
+
 ---
 
 ## 🤖 How AI is Used: Dynamic Difficulty Adjustment (DDA)

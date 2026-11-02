@@ -6,18 +6,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap');
 
 :root {
-  --bg-dark: #090d16;
-  --bg-panel: #111827;
-  --bg-panel-alt: #1f2937;
-  --border-outer: #030712;
-  --border-gold: #f59e0b;
+  /* OFFICIAL TEGAS COLOR PALETTE */
+  --tegas-yellow: #f9e60b; /* Vibrant Sarawak Yellow */
+  --tegas-red: #ea2527;    /* Vibrant Sarawak Red */
+  --tegas-black: #100e0c;  /* Deep Charcoal / Ink Black */
+  --tegas-white: #ffffff;  /* Crisp White */
+
+  --bg-dark: #0a0c10;
+  --bg-panel: #12151f;
+  --bg-panel-alt: #1a1e2c;
+  --border-outer: #000000;
+  --border-gold: #f9e60b;
+  --border-red: #ea2527;
   --border-cyan: #06b6d4;
   --border-purple: #8b5cf6;
-  --text-main: #f9fafb;
-  --text-muted: #9ca3af;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
   --color-green: #10b981;
-  --color-red: #ef4444;
-  --color-yellow: #facc15;
+  --color-red: #ea2527;
+  --color-yellow: #f9e60b;
   --color-blue: #3b82f6;
   --color-purple: #a855f7;
   --color-orange: #f97316;
@@ -46,22 +53,22 @@ body {
   overflow-x: hidden;
   user-select: none;
   background-image: 
-    radial-gradient(rgba(14, 165, 233, 0.08) 1px, transparent 1px),
-    radial-gradient(rgba(139, 92, 246, 0.05) 1px, transparent 1px);
+    radial-gradient(rgba(249, 230, 11, 0.05) 1px, transparent 1px),
+    radial-gradient(rgba(234, 37, 39, 0.04) 1px, transparent 1px);
   background-size: 24px 24px, 48px 48px;
 }
 
 /* TOP STATUS HEADER */
 .game-header {
-  background-color: #0b0f19;
-  border-bottom: 4px solid #1e293b;
-  padding: 10px 16px;
+  background: linear-gradient(180deg, #12151f 0%, #0a0c10 100%);
+  border-bottom: 4px solid #ea2527;
+  padding: 8px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 2px 0 #f9e60b;
   position: relative;
   z-index: 10;
 }
@@ -72,20 +79,56 @@ body {
   gap: 12px;
 }
 
+.tegas-brand-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  background: #ffffff;
+  border-radius: 50%;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0px #f9e60b;
+  filter: drop-shadow(0 0 6px rgba(249, 230, 11, 0.4));
+}
+
+.brand-text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.brand-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .brand-badge {
-  background: #f59e0b;
-  color: #000;
-  padding: 4px 8px;
+  background: #f9e60b;
+  color: #100e0c;
+  padding: 3px 7px;
   font-weight: bold;
   font-size: 10px;
   border: 2px solid #000;
   box-shadow: 2px 2px 0px #000;
+  letter-spacing: 0.5px;
+}
+
+.brand-subbadge {
+  background: #ea2527;
+  color: #ffffff;
+  padding: 3px 6px;
+  font-weight: bold;
+  font-size: 8px;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0px #000;
+  letter-spacing: 0.5px;
 }
 
 .brand-title {
-  font-size: 13px;
-  color: #38bdf8;
-  text-shadow: 2px 2px 0 #0f172a, 0 0 8px rgba(56, 189, 248, 0.4);
+  font-size: 12px;
+  color: #ffffff;
+  text-shadow: 2px 2px 0 #000, 0 0 8px rgba(249, 230, 11, 0.5);
+  letter-spacing: 0.5px;
 }
 
 .header-controls {
@@ -96,7 +139,7 @@ body {
 
 /* RETRO BUTTONS */
 .btn-retro {
-  background-color: #1e293b;
+  background-color: #1a1e2c;
   color: #f8fafc;
   font-family: var(--font-retro);
   font-size: 10px;
@@ -105,7 +148,7 @@ body {
   box-shadow: 3px 3px 0 #000;
   cursor: pointer;
   text-transform: uppercase;
-  transition: transform 0.05s ease, background-color 0.1s ease;
+  transition: transform 0.05s ease, background-color 0.1s ease, border-color 0.1s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -113,7 +156,8 @@ body {
 }
 
 .btn-retro:hover {
-  background-color: #334155;
+  background-color: #262c3e;
+  border-color: #f9e60b;
 }
 
 .btn-retro:active {
@@ -122,27 +166,29 @@ body {
 }
 
 .btn-retro.active {
-  background-color: #0284c7;
+  background-color: #ea2527;
   color: #fff;
-  border-color: #38bdf8;
+  border-color: #f9e60b;
 }
 
 .btn-retro-gold {
-  background-color: #d97706;
-  color: #000;
+  background-color: #f9e60b;
+  color: #100e0c;
   border-color: #000;
   box-shadow: 3px 3px 0 #000;
+  font-weight: bold;
 }
 .btn-retro-gold:hover {
-  background-color: #f59e0b;
+  background-color: #fde047;
+  border-color: #ea2527;
 }
 
 .btn-retro-primary {
-  background-color: #2563eb;
+  background-color: #ea2527;
   color: #ffffff;
 }
 .btn-retro-primary:hover {
-  background-color: #3b82f6;
+  background-color: #ff3b3e;
 }
 
 /* MAIN APP WRAPPER */
@@ -319,7 +365,7 @@ body {
 }
 
 .boss-bar {
-  background-color: #ef4444;
+  background: linear-gradient(90deg, #ea2527 0%, #ff3b3e 100%);
 }
 
 .hp-text {
@@ -417,16 +463,116 @@ body {
 
 /* SCREEN SHAKE */
 .screen-shake {
-  animation: shakeAnim 0.3s ease;
+  animation: shakeAnim 0.35s ease;
 }
 
 @keyframes shakeAnim {
-  0% { transform: translate(0, 0); }
-  20% { transform: translate(-6px, 4px); }
-  40% { transform: translate(6px, -4px); }
-  60% { transform: translate(-4px, -3px); }
-  80% { transform: translate(4px, 2px); }
-  100% { transform: translate(0, 0); }
+  0% { transform: translate(0, 0) rotate(0deg); }
+  15% { transform: translate(-8px, 6px) rotate(-1deg); }
+  30% { transform: translate(8px, -6px) rotate(1deg); }
+  45% { transform: translate(-6px, -4px) rotate(-0.5deg); }
+  60% { transform: translate(6px, 4px) rotate(0.5deg); }
+  75% { transform: translate(-3px, 2px) rotate(0deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+/* ==========================================================================
+   TEGAS HYPERCHARGE & BOSS ENRAGE (ENGAGEMENT SYSTEM)
+   ========================================================================== */
+
+/* TEGAS HYPERCHARGE SCREEN AURA */
+.battle-screen.hypercharge-active {
+  border-color: #f9e60b !important;
+  box-shadow: 
+    0 0 25px rgba(249, 230, 11, 0.7),
+    0 0 50px rgba(234, 37, 39, 0.45),
+    inset 0 0 30px rgba(249, 230, 11, 0.35) !important;
+  animation: hyperchargePulse 1s infinite alternate ease-in-out;
+}
+
+@keyframes hyperchargePulse {
+  0% {
+    box-shadow: 0 0 15px rgba(249, 230, 11, 0.6), 0 0 35px rgba(234, 37, 39, 0.3), inset 0 0 20px rgba(249, 230, 11, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 30px rgba(249, 230, 11, 0.9), 0 0 60px rgba(234, 37, 39, 0.6), inset 0 0 40px rgba(249, 230, 11, 0.45);
+  }
+}
+
+/* HYPERCHARGE ARENA OVERLAY BANNER */
+.hypercharge-banner {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  background: linear-gradient(90deg, #ea2527 0%, #f9e60b 50%, #ea2527 100%);
+  color: #100e0c;
+  padding: 6px 16px;
+  font-size: 10px;
+  font-weight: bold;
+  border: 2px solid #000;
+  box-shadow: 3px 3px 0 #000, 0 0 12px rgba(249, 230, 11, 0.8);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: hyperBannerBounce 0.8s infinite alternate ease-in-out;
+  white-space: nowrap;
+}
+
+@keyframes hyperBannerBounce {
+  0% { transform: translateX(-50%) scale(0.98); }
+  100% { transform: translateX(-50%) scale(1.04); }
+}
+
+.hyper-icon {
+  font-size: 12px;
+  animation: flashIcon 0.3s infinite alternate;
+}
+
+@keyframes flashIcon {
+  from { filter: brightness(1); }
+  to { filter: brightness(2); }
+}
+
+/* BOSS ENRAGED MODE */
+.boss-enraged {
+  filter: drop-shadow(0 0 18px #ea2527) brightness(1.25) saturate(1.4) !important;
+  animation: bossEnragedPulse 0.5s infinite alternate ease-in-out !important;
+}
+
+@keyframes bossEnragedPulse {
+  0% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 12px #ea2527) brightness(1.1); }
+  100% { transform: translateY(-10px) scale(1.08); filter: drop-shadow(0 0 24px #ff0000) brightness(1.4); }
+}
+
+.boss-enrage-banner {
+  position: absolute;
+  top: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  background: #ea2527;
+  color: #ffffff;
+  padding: 6px 14px;
+  font-size: 9px;
+  font-weight: bold;
+  border: 2px solid #000;
+  box-shadow: 3px 3px 0 #000, 0 0 15px rgba(234, 37, 39, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: enrageBannerFlash 0.5s infinite alternate;
+  white-space: nowrap;
+}
+
+@keyframes enrageBannerFlash {
+  0% { background-color: #ea2527; transform: translateX(-50%) scale(0.98); }
+  100% { background-color: #990000; transform: translateX(-50%) scale(1.02); }
 }
 
 /* SPELL VFX PARTICLES */
@@ -778,9 +924,9 @@ dialog::backdrop {
 }
 
 .claim-ticket-card {
-  background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
-  border: 4px solid #f59e0b;
-  box-shadow: 6px 6px 0 #000;
+  background: linear-gradient(135deg, #12151f 0%, #0a0c10 100%);
+  border: 4px solid #f9e60b;
+  box-shadow: 6px 6px 0 #000, 0 0 16px rgba(249, 230, 11, 0.3);
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -792,21 +938,41 @@ dialog::backdrop {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px dashed #f59e0b;
-  padding-bottom: 8px;
+  border-bottom: 2px dashed #f9e60b;
+  padding-bottom: 10px;
+  gap: 8px;
+}
+
+.ticket-brand-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ticket-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 50%;
+  border: 1px solid #000;
+  box-shadow: 1px 1px 0 #f9e60b;
 }
 
 .ticket-title {
-  color: #f59e0b;
+  color: #f9e60b;
   font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
 }
 
 .ticket-id {
   font-size: 9px;
-  color: #38bdf8;
-  background: #030712;
-  padding: 2px 6px;
-  border: 1px solid #000;
+  color: #f9e60b;
+  background: #100e0c;
+  padding: 4px 8px;
+  border: 2px solid #ea2527;
+  font-weight: bold;
 }
 
 .ticket-body {
@@ -958,13 +1124,15 @@ dialog::backdrop {
 }
 
 .banner-victory {
-  background: linear-gradient(135deg, #1e1b4b 0%, #064e3b 50%, #0f172a 100%);
-  border-color: #f59e0b;
+  background: linear-gradient(135deg, #12151f 0%, #1a1e2c 50%, #0a0c10 100%);
+  border-color: #f9e60b;
+  box-shadow: 6px 6px 0 #000, 0 0 20px rgba(249, 230, 11, 0.4);
 }
 
 .banner-defeat {
-  background: linear-gradient(135deg, #450a0a 0%, #1e1b4b 50%, #090d16 100%);
-  border-color: #ef4444;
+  background: linear-gradient(135deg, #2b0808 0%, #1a1e2c 50%, #0a0c10 100%);
+  border-color: #ea2527;
+  box-shadow: 6px 6px 0 #000, 0 0 20px rgba(234, 37, 39, 0.4);
 }
 
 .result-badge-row {
@@ -983,9 +1151,9 @@ dialog::backdrop {
   font-weight: bold;
 }
 
-.pill-gold { background: #f59e0b; color: #000; }
+.pill-gold { background: #f9e60b; color: #100e0c; }
 .pill-cyan { background: #06b6d4; color: #000; }
-.pill-red { background: #ef4444; color: #fff; }
+.pill-red { background: #ea2527; color: #fff; }
 .pill-orange { background: #f97316; color: #000; }
 
 .result-title {

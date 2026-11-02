@@ -231,6 +231,55 @@ const SoundEngine = (() => {
     });
   }
 
+  // TEGAS HYPERCHARGE SOARING ARPEGGIO
+  function playHypercharge() {
+    if (isMuted) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    const notes = [392.00, 523.25, 659.25, 783.99, 1046.50, 1318.51];
+    notes.forEach((freq, idx) => {
+      setTimeout(() => {
+        if (!audioCtx || isMuted) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.16);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.18);
+      }, idx * 55);
+    });
+  }
+
+  // BOSS ENRAGE ALARM / SIREN
+  function playEnrage() {
+    if (isMuted) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(440, audioCtx.currentTime + 0.12);
+    osc.frequency.linearRampToValueAtTime(220, audioCtx.currentTime + 0.24);
+    osc.frequency.linearRampToValueAtTime(550, audioCtx.currentTime + 0.36);
+
+    gain.gain.setValueAtTime(0.16, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.45);
+  }
+
   // RETRO 8-BIT BGM GENERATOR
   // Loops a driving cyber-RPG arpeggio bassline using Web Audio API
   function startBgm() {
@@ -289,6 +338,8 @@ const SoundEngine = (() => {
     playCorrect,
     playWrong,
     playVictory,
+    playHypercharge,
+    playEnrage,
     startBgm,
     stopBgm,
     toggleMute,

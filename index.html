@@ -12,8 +12,14 @@
   <!-- TOP HEADER -->
   <header class="game-header">
     <div class="brand-section">
-      <span class="brand-badge">TEGAS AI</span>
-      <h1 class="brand-title">ALGORITHM BOSS BATTLE</h1>
+      <img src="tegas-logo.png" alt="TEGAS Official Logo" class="tegas-brand-logo" />
+      <div class="brand-text-block">
+        <div class="brand-badge-row">
+          <span class="brand-badge">TEGAS</span>
+          <span class="brand-subbadge">SARAWAK</span>
+        </div>
+        <h1 class="brand-title">ALGORITHM BOSS BATTLE</h1>
+      </div>
     </div>
     <div class="header-controls">
       <button id="btn-bgm" class="btn-retro" type="button" aria-label="Toggle Background Music">🎵 BGM OFF</button>
@@ -56,6 +62,18 @@
       <!-- BATTLE SCREEN -->
       <section id="battle-screen" class="battle-screen" aria-label="Battlefield Arena">
         
+        <!-- TEGAS HYPERCHARGE OVERLAY BANNER (STREAK >= 3) -->
+        <div id="hypercharge-banner" class="hypercharge-banner" style="display: none;">
+          <span class="hyper-icon">⚡</span>
+          <span>TEGAS HYPERCHARGE ACTIVE: 1.5x DAMAGE &amp; SCORE BOOST!</span>
+          <span class="hyper-icon">⚡</span>
+        </div>
+
+        <!-- BOSS ENRAGED WARNING BANNER (HP <= 35%) -->
+        <div id="boss-enrage-banner" class="boss-enrage-banner" style="display: none;">
+          <span>⚠️ WARNING: BOSS ENRAGED! DAMAGE +40% &amp; RAPID CLOCK! ⚠️</span>
+        </div>
+
         <!-- ARENA STAGE -->
         <div id="arena-stage" class="arena-stage arena-catacombs">
           
@@ -252,7 +270,10 @@
           <!-- PRINTABLE / SCANNABLE PRIZE TICKET -->
           <div id="claim-ticket-card" class="claim-ticket-card">
             <div class="ticket-header">
-              <span class="ticket-title">★ TEGAS AI MATHS PRIZE PASS ★</span>
+              <div class="ticket-brand-left">
+                <img src="tegas-logo.png" alt="TEGAS Official Logo" class="ticket-logo" />
+                <span class="ticket-title">★ TEGAS AI MATHS PRIZE PASS ★</span>
+              </div>
               <span id="ticket-code-val" class="ticket-id">TEGAS-AI-INT-X82F10</span>
             </div>
             <div class="ticket-body">

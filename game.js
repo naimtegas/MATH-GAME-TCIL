@@ -82,7 +82,9 @@ const GameApp = (() => {
     timerInterval: null,
     timeRemaining: 0,
     allocatedTime: 10,
-    ticketId: ''
+    ticketId: '',
+    isHypercharge: false,
+    isEnraged: false
   };
 
   // DOM Elements cache
@@ -123,6 +125,8 @@ const GameApp = (() => {
       // Battle Arena & Characters
       battleContainer: document.getElementById('battle-screen'),
       arenaStage: document.getElementById('arena-stage'),
+      hyperchargeBanner: document.getElementById('hypercharge-banner'),
+      bossEnrageBanner: document.getElementById('boss-enrage-banner'),
       heroSprite: document.getElementById('hero-sprite'),
       bossSprite: document.getElementById('boss-sprite'),
       heroName: document.getElementById('hero-name'),
@@ -381,6 +385,11 @@ const GameApp = (() => {
     state.isTurnLocked = false;
     state.startTime = Date.now();
     state.ticketId = generateClaimToken();
+    state.isHypercharge = false;
+    state.isEnraged = false;
+    if (dom.battleContainer) dom.battleContainer.classList.remove('hypercharge-active');
+    if (dom.hyperchargeBanner) dom.hyperchargeBanner.style.display = 'none';
+    if (dom.bossEnrageBanner) dom.bossEnrageBanner.style.display = 'none';
 
     // Reset Hero name display
     if (dom.heroName) dom.heroName.textContent = state.playerName.toUpperCase();
@@ -408,6 +417,9 @@ const GameApp = (() => {
     state.bossMaxHp = boss.maxHp;
     state.bossHp = boss.maxHp;
     state.isFrozen = false;
+    state.isEnraged = false;
+    if (dom.bossSprite) dom.bossSprite.classList.remove('boss-enraged');
+    if (dom.bossEnrageBanner) dom.bossEnrageBanner.style.display = 'none';
 
     // Arena styling
     dom.arenaStage.className = `arena-stage ${boss.bgClass}`;
@@ -507,8 +519,8 @@ const GameApp = (() => {
       dom.qOptionsGrid.appendChild(btn);
     });
 
-    state.allocatedTime = q.timeLimit;
-    state.timeRemaining = q.timeLimit;
+    state.allocatedTime = state.isEnraged ? Math.max(6, Math.round(q.timeLimit * 0.8)) : q.timeLimit;
+    state.timeRemaining = state.allocatedTime;
     updateTimerDisplay();
 
     if (state.timerInterval) clearInterval(state.timerInterval);
@@ -601,7 +613,21 @@ const GameApp = (() => {
       state.combo++;
       if (state.combo > state.maxCombo) state.maxCombo = state.combo;
 
+      // TEGAS HYPERCHARGE ACTIVATION (Feature A1: Streak >= 3)
+      if (state.combo >= 3) {
+        if (!state.isHypercharge) {
+          state.isHypercharge = true;
+          if (dom.battleContainer) dom.battleContainer.classList.add('hypercharge-active');
+          if (dom.hyperchargeBanner) dom.hyperchargeBanner.style.display = 'flex';
+          window.SoundEngine.playHypercharge();
+          screenShake('heavy');
+          showFloatingText(dom.heroSprite, '⚡ TEGAS HYPERCHARGE! ⚡', '#f9e60b');
+          logMessage('⚡ TEGAS HYPERCHARGE ACTIVE! 1.5x Spell Damage & High-Voltage Rush!');
+        }
+      }
+
       const comboMult = 1 + (state.combo - 1) * 0.25;
+      const hyperMult = state.isHypercharge ? 1.5 : 1.0;
       const speedBonus = timeTaken < 3.5 ? 1.3 : 1.0;
       let damage = 0;
 
@@ -610,13 +636,13 @@ const GameApp = (() => {
       if (q.type === 'fireball') {
         window.SoundEngine.playFireball();
         spawnVfx('fireball');
-        damage = Math.round((65 + Math.random() * 20) * comboMult * speedBonus);
+        damage = Math.round((65 + Math.random() * 20) * comboMult * speedBonus * hyperMult);
         applyBossDamage(damage, 'FIRE DAMAGE');
       } else if (q.type === 'shield') {
         window.SoundEngine.playShield();
         spawnVfx('shield');
         const heal = 25;
-        const shieldGain = 30;
+        const shieldGain = Math.round(30 * hyperMult);
         state.playerHp = Math.min(state.playerMaxHp, state.playerHp + heal);
         state.playerShield += shieldGain;
         showFloatingText(dom.heroSprite, `+${heal} HP / +${shieldGain} SHIELD!`, '#06b6d4');
@@ -624,18 +650,22 @@ const GameApp = (() => {
       } else if (q.type === 'critical') {
         window.SoundEngine.playLightning();
         spawnVfx('lightning');
-        damage = Math.round((110 + Math.random() * 30) * comboMult * speedBonus);
+        damage = Math.round((110 + Math.random() * 30) * comboMult * speedBonus * hyperMult);
         applyBossDamage(damage, 'CRITICAL ALGEBRA STRIKE');
       } else if (q.type === 'freeze') {
         window.SoundEngine.playCorrect();
         spawnVfx('freeze');
-        damage = Math.round(45 * comboMult);
+        damage = Math.round(45 * comboMult * hyperMult);
         state.isFrozen = true;
         applyBossDamage(damage, 'TIME WARP CHILL');
         logMessage(`❄️ TIME WARP! The boss's circuits are frozen for 1 turn!`);
       }
 
-      const points = Math.round((damage > 0 ? damage : 50) * 10 * ddaResult.tier * comboMult);
+      let points = Math.round((damage > 0 ? damage : 50) * 10 * ddaResult.tier * comboMult * hyperMult);
+      if (state.isEnraged && state.bossHp <= 0) {
+        points += 500;
+        showFloatingText(dom.bossSprite, '+500 ENRAGED SLAYER BONUS!', '#f9e60b');
+      }
       state.score += points;
       updatePlayerStats();
 
@@ -645,6 +675,12 @@ const GameApp = (() => {
 
     } else {
       state.combo = 0;
+      if (state.isHypercharge) {
+        state.isHypercharge = false;
+        if (dom.battleContainer) dom.battleContainer.classList.remove('hypercharge-active');
+        if (dom.hyperchargeBanner) dom.hyperchargeBanner.style.display = 'none';
+        logMessage('💔 HYPERCHARGE LOST! Calculation streak broken.');
+      }
       window.SoundEngine.playWrong();
       logMessage(`❌ MISFIRE: Incorrect! [${q.explanation}]`);
       updatePlayerStats();
@@ -663,13 +699,24 @@ const GameApp = (() => {
     state.bossHp = Math.max(0, state.bossHp - damage);
     updateBossDisplay();
 
+    const isCrit = damage > 90;
     window.SoundEngine.playHit();
-    screenShake();
+    screenShake(isCrit ? 'heavy' : 'normal');
     dom.bossSprite.classList.add('hurt');
     setTimeout(() => dom.bossSprite.classList.remove('hurt'), 400);
 
-    const isCrit = damage > 90;
-    showFloatingText(dom.bossSprite, `-${damage} ${isCrit ? 'CRITICAL!' : ''}`, isCrit ? '#facc15' : '#ef4444');
+    // BOSS ENRAGED PHASE TRIGGER (Feature A3: HP <= 35%)
+    if (state.bossHp > 0 && state.bossHp <= state.bossMaxHp * 0.35 && !state.isEnraged) {
+      state.isEnraged = true;
+      if (dom.bossSprite) dom.bossSprite.classList.add('boss-enraged');
+      if (dom.bossEnrageBanner) dom.bossEnrageBanner.style.display = 'flex';
+      window.SoundEngine.playEnrage();
+      screenShake('heavy');
+      showFloatingText(dom.bossSprite, '⚠️ BOSS ENRAGED! ⚠️', '#ea2527');
+      logMessage(`⚠️ WARNING: ${BOSSES[state.currentBossIdx].name} is ENRAGED! Attacks boosted by 40% and question timer accelerated!`);
+    }
+
+    showFloatingText(dom.bossSprite, `-${damage} ${isCrit ? 'CRITICAL!' : ''}`, isCrit ? '#f9e60b' : '#ea2527');
     logMessage(`💥 ${attackName}! Dealt ${damage} damage to ${BOSSES[state.currentBossIdx].name}!`);
   }
 
@@ -683,7 +730,10 @@ const GameApp = (() => {
     }
 
     const boss = BOSSES[state.currentBossIdx];
-    const rawDamage = Math.floor(Math.random() * (boss.atkMax - boss.atkMin + 1)) + boss.atkMin;
+    let rawDamage = Math.floor(Math.random() * (boss.atkMax - boss.atkMin + 1)) + boss.atkMin;
+    if (state.isEnraged) {
+      rawDamage = Math.round(rawDamage * 1.4);
+    }
     const randomTaunt = boss.taunts[Math.floor(Math.random() * boss.taunts.length)];
 
     logMessage(`⚠️ ENEMY TURN: ${randomTaunt}`);
@@ -692,7 +742,7 @@ const GameApp = (() => {
     setTimeout(() => {
       dom.bossSprite.classList.remove('attack-lunge');
       window.SoundEngine.playHit();
-      screenShake();
+      screenShake(state.isEnraged ? 'heavy' : 'normal');
 
       let remainingDamage = rawDamage;
       if (state.playerShield > 0) {
@@ -730,6 +780,10 @@ const GameApp = (() => {
     const currentBoss = BOSSES[state.currentBossIdx];
     logMessage(`🏆 VICTORY! You have vanquished ${currentBoss.name}!`);
     window.SoundEngine.playVictory();
+
+    state.isEnraged = false;
+    if (dom.bossSprite) dom.bossSprite.classList.remove('boss-enraged');
+    if (dom.bossEnrageBanner) dom.bossEnrageBanner.style.display = 'none';
 
     dom.bossSprite.classList.add('defeated');
 
@@ -1029,9 +1083,20 @@ const GameApp = (() => {
     }, 1200);
   }
 
-  function screenShake() {
+  function screenShake(intensity = 'normal') {
     dom.battleContainer.classList.add('screen-shake');
-    setTimeout(() => dom.battleContainer.classList.remove('screen-shake'), 300);
+    setTimeout(() => dom.battleContainer.classList.remove('screen-shake'), 350);
+
+    // HAPTIC FEEDBACK (Feature A2: Mobile & Tablet Vibration)
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        if (intensity === 'heavy') {
+          navigator.vibrate([50, 40, 80]);
+        } else {
+          navigator.vibrate([30, 20, 40]);
+        }
+      } catch (e) {}
+    }
   }
 
   function spawnVfx(spellType) {
