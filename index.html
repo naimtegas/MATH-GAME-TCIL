@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Algorithm Boss Battle: Speed Math RPG | TEGAS AI Challenge</title>
+  <meta name="description" content="A retro 8-bit turn-based math RPG powered by Dynamic Difficulty Adjustment AI. Defeat AI monsters with mental math, algebra, and logic to win physical prizes!">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- TOP HEADER -->
+  <header class="game-header">
+    <div class="brand-section">
+      <span class="brand-badge">TEGAS AI</span>
+      <h1 class="brand-title">ALGORITHM BOSS BATTLE</h1>
+    </div>
+    <div class="header-controls">
+      <button id="btn-bgm" class="btn-retro" type="button" aria-label="Toggle Background Music">🎵 BGM OFF</button>
+      <button id="btn-mute" class="btn-retro" type="button" aria-label="Toggle Sound Effects">🔊 SOUND ON</button>
+      <button id="btn-hof" class="btn-retro btn-retro-gold" type="button" aria-label="Open Hall of Fame">🏆 LEADERBOARD</button>
+      <button id="btn-help" class="btn-retro" type="button" aria-label="Game Rules & Guide">❓ GUIDE</button>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="app-container">
+
+    <!-- ==========================================
+         VIEW 1: BATTLE VIEW (ACTIVE COMBAT)
+         ========================================== -->
+    <div id="view-battle" class="game-view active-view">
+
+      <!-- DDA AI ENGINE STATUS BAR -->
+      <section class="ai-status-panel" aria-label="AI Master System Status">
+        <div class="ai-indicator-wrapper">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span id="ai-message-text" class="ai-message">AI Engine Online: Calibrating cognitive difficulty in real-time...</span>
+        </div>
+        <div class="ai-metrics">
+          <div class="metric-item">
+            <span class="metric-label">AI TIER:</span>
+            <span id="dda-tier-val" class="metric-val">T2</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">COMBO:</span>
+            <span id="combo-val" class="metric-val">0x</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">SCORE:</span>
+            <span id="score-val" class="metric-val">0</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- BATTLE SCREEN -->
+      <section id="battle-screen" class="battle-screen" aria-label="Battlefield Arena">
+        
+        <!-- ARENA STAGE -->
+        <div id="arena-stage" class="arena-stage arena-catacombs">
+          
+          <!-- PLAYER HERO SECTION (LEFT) -->
+          <div class="combatant combatant-player">
+            <div class="combatant-info">
+              <h2 id="hero-name" class="combatant-name" tabindex="-1">CYBER MAGE</h2>
+              <span id="hero-grade-tag" class="combatant-subtitle">Intermediate Mage</span>
+              <div class="hp-bar-outer" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                <div id="hero-hp-bar" class="hp-bar-inner" style="width: 100%;"></div>
+              </div>
+              <span id="hero-hp-text" class="hp-text">100 / 100 HP</span>
+              <span id="hero-shield-badge" class="shield-badge" style="display: none;">🛡️ SHIELD: +0</span>
+            </div>
+            <div id="hero-sprite" class="sprite-box hero-box" aria-label="Hero Sprite">
+              <!-- Hero SVG injected via svg-assets.js -->
+            </div>
+          </div>
+
+          <!-- BOSS MONSTER SECTION (RIGHT) -->
+          <div class="combatant combatant-boss">
+            <div class="combatant-info">
+              <h2 id="boss-name" class="combatant-name">VECTOR IMP</h2>
+              <span id="boss-subtitle" class="combatant-subtitle">The Glitch Sprite (ROUND 1/3)</span>
+              <div class="hp-bar-outer" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                <div id="boss-hp-bar" class="hp-bar-inner boss-bar" style="width: 100%;"></div>
+              </div>
+              <span id="boss-hp-text" class="hp-text">220 / 220 HP</span>
+            </div>
+            <div id="boss-sprite" class="sprite-box boss-box" aria-label="Boss Monster Sprite">
+              <!-- Boss SVG injected via svg-assets.js -->
+            </div>
+          </div>
+
+          <!-- VISUAL SPELL EFFECTS OVERLAY -->
+          <div id="vfx-container" class="vfx-container" aria-hidden="true"></div>
+        </div>
+
+        <!-- COMBAT LOG TICKER -->
+        <div class="combat-log-bar" aria-live="polite">
+          <span id="combat-log-text">Welcome, Challenger! Choose a spell below to unleash your calculations upon the AI monsters!</span>
+        </div>
+      </section>
+
+      <!-- SPELL ACTION DECK (CONTROLS) -->
+      <section class="action-deck" aria-label="Spell Action Deck">
+        <div class="deck-header">
+          <span>SELECT YOUR MATH ATTACK</span>
+          <span id="turn-indicator">TURN: PLAYER</span>
+        </div>
+        <div class="spell-grid">
+
+          <!-- SPELL 1: FIREBALL -->
+          <button id="spell-fireball" type="button" class="spell-card card-fire">
+            <div class="spell-icon-box" id="icon-fireball"></div>
+            <div class="spell-info">
+              <span class="spell-title">🔥 FIREBALL</span>
+              <span class="spell-desc">3-Step Speed Mental Math</span>
+              <span class="spell-stat">10s Timer • Burst DMG</span>
+            </div>
+          </button>
+
+          <!-- SPELL 2: SHIELD -->
+          <button id="spell-shield" type="button" class="spell-card card-shield">
+            <div class="spell-icon-box" id="icon-shield"></div>
+            <div class="spell-info">
+              <span class="spell-title">🛡️ AEGIS SHIELD</span>
+              <span class="spell-desc">Primes, Fractions &amp; %</span>
+              <span class="spell-stat">Restore HP + Absorb Hit</span>
+            </div>
+          </button>
+
+          <!-- SPELL 3: CRITICAL STRIKE -->
+          <button id="spell-critical" type="button" class="spell-card card-critical">
+            <div class="spell-icon-box" id="icon-critical"></div>
+            <div class="spell-info">
+              <span class="spell-title">⚡ CRITICAL STRIKE</span>
+              <span class="spell-desc">Solve Algebraic Equations</span>
+              <span class="spell-stat">Heavy DMG • Bonus Multiplier</span>
+            </div>
+          </button>
+
+          <!-- SPELL 4: TIME WARP -->
+          <button id="spell-freeze" type="button" class="spell-card card-freeze">
+            <div class="spell-icon-box" id="icon-freeze"></div>
+            <div class="spell-info">
+              <span class="spell-title">❄️ TIME WARP</span>
+              <span class="spell-desc">Number Patterns &amp; Sequences</span>
+              <span class="spell-stat">Freeze Boss Turn</span>
+            </div>
+          </button>
+
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ==========================================
+         VIEW 2: GRAND VICTORY PAGE (FINAL BOSS DEFEATED)
+         ========================================== -->
+    <div id="view-victory" class="game-view" style="display: none;">
+      
+      <!-- VICTORY HEADER BANNER -->
+      <header class="result-banner banner-victory">
+        <div class="result-badge-row">
+          <span class="result-pill-badge pill-gold">🏆 TOURNAMENT CHAMPION</span>
+          <span class="result-pill-badge pill-cyan">TEGAS AI CHALLENGE 2026</span>
+        </div>
+        <h1 id="victory-heading" tabindex="-1" class="result-title text-victory-glow">
+          VICTORY! FINAL BOSS OVERTHROWN!
+        </h1>
+        <p class="result-subtitle">
+          You conquered the Vector Imp, shattered the Matrix Golem, and banished the Derivative Dragon!
+        </p>
+      </header>
+
+      <!-- MAIN RESULTS GRID -->
+      <div class="result-content-grid">
+        
+        <!-- LEFT COLUMN: POINTS RECEIVED & PERFORMANCE -->
+        <div class="result-card">
+          <div class="card-inner-header">
+            <span>📊 TOTAL POINTS RECEIVED</span>
+            <span id="vic-tier-badge" class="badge-tag">TIER 5 (OVERDRIVE)</span>
+          </div>
+
+          <div class="score-hero-box">
+            <span class="score-label">FINAL TOURNAMENT SCORE</span>
+            <span id="vic-total-score" class="score-hero-val text-gold-glow">0</span>
+          </div>
+
+          <div class="stats-breakdown-grid">
+            <div class="stat-cell">
+              <span class="stat-cell-label">BASE BATTLE PTS</span>
+              <span id="vic-base-pts" class="stat-cell-val">0</span>
+            </div>
+            <div class="stat-cell">
+              <span class="stat-cell-label">SPEED COGNITION BONUS</span>
+              <span id="vic-speed-bonus" class="stat-cell-val text-cyan">+0</span>
+            </div>
+            <div class="stat-cell">
+              <span class="stat-cell-label">MAX COMBO STREAK</span>
+              <span id="vic-max-combo" class="stat-cell-val text-orange">0x</span>
+            </div>
+            <div class="stat-cell">
+              <span class="stat-cell-label">CALCULATION ACCURACY</span>
+              <span id="vic-accuracy" class="stat-cell-val text-green">100%</span>
+            </div>
+          </div>
+
+          <!-- TOURNAMENT RANKING CALLOUT -->
+          <div class="ranking-highlight-box">
+            <div class="rank-header">
+              <span>🏅 YOUR OFFICIAL TOURNAMENT RANK</span>
+            </div>
+            <div class="rank-val-row">
+              <span id="vic-rank-badge" class="rank-big-badge">🥇 RANK #1</span>
+              <span id="vic-rank-desc" class="rank-title-desc">S-TIER GRANDMASTER</span>
+            </div>
+            <p class="rank-note">
+              Ranked among all registered contenders in the TEGAS AI Mathematics Championship.
+            </p>
+          </div>
+
+          <!-- LIVE LEADERBOARD PREVIEW RIGHT ON VICTORY PAGE -->
+          <div class="card-inner-header" style="margin-top: 14px;">
+            <span>🏆 LIVE TOURNAMENT RANKINGS</span>
+          </div>
+          <div class="hof-table-wrap">
+            <table class="hof-table">
+              <thead>
+                <tr>
+                  <th>RANK</th>
+                  <th>CHALLENGER</th>
+                  <th>TIER</th>
+                  <th>COMBO</th>
+                  <th>SCORE</th>
+                </tr>
+              </thead>
+              <tbody id="vic-hof-table-body">
+                <!-- Dynamically rendered with current player highlighted -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: OFFICIAL PRIZE CLAIM VOUCHER & REGISTRATION -->
+        <div class="result-card">
+          <div class="card-inner-header">
+            <span>🎁 OFFICIAL TEGAS PRIZE CLAIM PASS</span>
+            <span class="badge-tag" style="background: #166534; color: #86efac;">VERIFIED WINNER</span>
+          </div>
+
+          <!-- PRINTABLE / SCANNABLE PRIZE TICKET -->
+          <div id="claim-ticket-card" class="claim-ticket-card">
+            <div class="ticket-header">
+              <span class="ticket-title">★ TEGAS AI MATHS PRIZE PASS ★</span>
+              <span id="ticket-code-val" class="ticket-id">TEGAS-AI-INT-X82F10</span>
+            </div>
+            <div class="ticket-body">
+              <div id="ticket-qr-container" class="ticket-qr" aria-label="Scannable QR Verification Code">
+                <!-- Pure SVG QR Code injected here -->
+              </div>
+              <div class="ticket-details">
+                <div class="ticket-row">
+                  <span class="ticket-label">CHALLENGER:</span>
+                  <span id="ticket-name-val" class="ticket-val">Cyber Mage</span>
+                </div>
+                <div class="ticket-row">
+                  <span class="ticket-label">SCHOOL/ORG:</span>
+                  <span id="ticket-school-val" class="ticket-val">SMK Petra Jaya</span>
+                </div>
+                <div class="ticket-row">
+                  <span class="ticket-label">FINAL SCORE:</span>
+                  <span id="ticket-score-val" class="ticket-val">0</span>
+                </div>
+                <div class="ticket-row">
+                  <span class="ticket-label">MAX COMBO:</span>
+                  <span id="ticket-combo-val" class="ticket-val">0x</span>
+                </div>
+                <div class="ticket-row">
+                  <span class="ticket-label">ACCURACY:</span>
+                  <span id="ticket-accuracy-val" class="ticket-val">100%</span>
+                </div>
+                <div class="ticket-row">
+                  <span class="ticket-label">BRACKET:</span>
+                  <span id="ticket-tier-val" class="ticket-val">INTERMEDIATE</span>
+                </div>
+                <div class="ticket-row">
+                  <span class="ticket-label">DATE:</span>
+                  <span id="ticket-date-val" class="ticket-val">2026-10-22</span>
+                </div>
+              </div>
+            </div>
+            <div class="ticket-footer-note">
+              🎁 Present this ticket or QR code to the TEGAS event counter to claim your physical swag / gift prize!
+            </div>
+          </div>
+
+          <!-- PRIZE REGISTRATION FORM -->
+          <form id="claim-form" style="margin-top: 12px;">
+            <div class="form-group">
+              <label for="claim-student-name" class="form-label">STUDENT FULL NAME:</label>
+              <input type="text" id="claim-student-name" class="form-input" required placeholder="Full Name as in IC / Student ID">
+            </div>
+            <div class="form-group">
+              <label for="claim-school-name" class="form-label">SCHOOL / INSTITUTION / CITY:</label>
+              <input type="text" id="claim-school-name" class="form-input" required placeholder="e.g. SMK St. Joseph / Swinburne / Kuching">
+            </div>
+            <div class="form-group">
+              <label for="claim-contact" class="form-label">CONTACT EMAIL / PHONE NUMBER:</label>
+              <input type="text" id="claim-contact" class="form-input" required placeholder="For prize notification">
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 10px;">
+              <button type="submit" class="btn-retro btn-retro-gold" style="flex: 1;">
+                💾 REGISTER PRIZE &amp; SAVE
+              </button>
+              <button type="button" id="btn-print-voucher" class="btn-retro" style="flex: 1;">
+                🖨️ PRINT PASS
+              </button>
+            </div>
+          </form>
+
+          <button type="button" id="btn-vic-play-again" class="btn-retro btn-retro-primary" style="margin-top: 12px; width: 100%; padding: 12px;">
+            ⚔️ PLAY AGAIN / NEW CHALLENGE
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ==========================================
+         VIEW 3: DEFEAT PAGE (FELL IN LOWER ROUNDS)
+         ========================================== -->
+    <div id="view-defeat" class="game-view" style="display: none;">
+      
+      <!-- DEFEAT HEADER BANNER -->
+      <header class="result-banner banner-defeat">
+        <div class="result-badge-row">
+          <span class="result-pill-badge pill-red">💀 SYSTEM CRITICAL</span>
+          <span id="defeat-stage-badge" class="result-pill-badge pill-orange">FELL AT ROUND 2: MATRIX GOLEM</span>
+        </div>
+        <h1 id="defeat-heading" tabindex="-1" class="result-title text-defeat-glow">
+          COMPUTATION SYSTEM DOWN!
+        </h1>
+        <p id="defeat-subtitle" class="result-subtitle">
+          Your cyber magic was depleted by the AI monster. Analyze your calculations and strike back!
+        </p>
+      </header>
+
+      <!-- MAIN RESULTS GRID -->
+      <div class="result-content-grid">
+        
+        <!-- LEFT COLUMN: POINTS RECEIVED & AI COACH DIAGNOSTIC -->
+        <div class="result-card">
+          <div class="card-inner-header">
+            <span>📊 POINTS ACCUMULATED IN THIS RUN</span>
+            <span id="def-tier-badge" class="badge-tag">TIER 2</span>
+          </div>
+
+          <div class="score-hero-box">
+            <span class="score-label">TOTAL POINTS EARNED</span>
+            <span id="def-total-score" class="score-hero-val text-orange">0</span>
+          </div>
+
+          <div class="stats-breakdown-grid">
+            <div class="stat-cell">
+              <span class="stat-cell-label">ROUNDS CLEARED</span>
+              <span id="def-rounds-cleared" class="stat-cell-val">1 / 3</span>
+            </div>
+            <div class="stat-cell">
+              <span class="stat-cell-label">MAX COMBO REACHED</span>
+              <span id="def-max-combo" class="stat-cell-val text-orange">0x</span>
+            </div>
+            <div class="stat-cell">
+              <span class="stat-cell-label">CALCULATION ACCURACY</span>
+              <span id="def-accuracy" class="stat-cell-val text-yellow">0%</span>
+            </div>
+            <div class="stat-cell">
+              <span class="stat-cell-label">AVG RESPONSE TIME</span>
+              <span id="def-avg-time" class="stat-cell-val text-cyan">0.0s</span>
+            </div>
+          </div>
+
+          <!-- AI COACH DIAGNOSTIC BOX -->
+          <div class="ai-coach-box">
+            <div class="coach-header">
+              <span>🤖 AI MASTER COACH DIAGNOSTIC &amp; STRATEGY</span>
+            </div>
+            <p id="def-coach-advice" class="coach-text">
+              The Matrix Golem capitalized on algebraic hesitations. Remember: use Aegis Shield when prime numbers or fractions appear to absorb incoming blows and restore HP!
+            </p>
+          </div>
+
+          <!-- RETRY & RECONFIGURE ACTIONS -->
+          <div style="display: flex; gap: 10px; margin-top: 14px;">
+            <button type="button" id="btn-def-retry" class="btn-retro btn-retro-primary" style="flex: 1; padding: 12px;">
+              ⚔️ RETRY CHALLENGE
+            </button>
+            <button type="button" id="btn-def-change-grade" class="btn-retro" style="flex: 1; padding: 12px;">
+              ⚙️ CHANGE BRACKET
+            </button>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: LEADERBOARD PLACEMENT -->
+        <div class="result-card">
+          <div class="card-inner-header">
+            <span>🏆 TOURNAMENT RANKING PLACEMENT</span>
+            <span id="def-rank-badge" class="badge-tag">RANK #4</span>
+          </div>
+
+          <div class="ranking-highlight-box" style="margin-bottom: 12px;">
+            <div class="rank-header">
+              <span>CURRENT LEADERBOARD POSITION</span>
+            </div>
+            <div class="rank-val-row">
+              <span id="def-rank-callout" class="rank-big-badge" style="color: #f59e0b;">RANK #4</span>
+              <span id="def-rank-desc" class="rank-title-desc">TOP 30% CONTENDER</span>
+            </div>
+            <p class="rank-note">
+              Even in defeat, your score has been recorded! Defeat all 3 bosses to unlock the official Prize Ticket!
+            </p>
+          </div>
+
+          <div class="hof-table-wrap">
+            <table class="hof-table">
+              <thead>
+                <tr>
+                  <th>RANK</th>
+                  <th>CHALLENGER</th>
+                  <th>TIER</th>
+                  <th>COMBO</th>
+                  <th>SCORE</th>
+                </tr>
+              </thead>
+              <tbody id="def-hof-table-body">
+                <!-- Dynamically rendered with current player highlighted -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- 1. START GAME & BRACKET SELECT MODAL -->
+  <dialog id="start-modal" closedby="any" aria-labelledby="start-title">
+    <div class="dialog-header">
+      <h2 id="start-title" class="dialog-title">⚔️ ENTER THE MATH ARENA</h2>
+    </div>
+    <form id="start-form">
+      <div class="form-group">
+        <label for="input-hero-name" class="form-label">CHALLENGER CODENAME:</label>
+        <input type="text" id="input-hero-name" class="form-input" placeholder="e.g. PixelWizard99" required maxlength="16">
+      </div>
+      <div class="form-group">
+        <label for="select-grade" class="form-label">STUDENT AGE / GRADE BRACKET:</label>
+        <select id="select-grade" class="form-select">
+          <option value="junior">Junior Apprentice (Ages 9-12 / Primary)</option>
+          <option value="intermediate" selected>Intermediate Mage (Ages 13-15 / Lower Sec)</option>
+          <option value="senior">Master Arithmancer (Ages 16-18+ / Upper Sec)</option>
+        </select>
+      </div>
+      <p style="font-size: 9px; color: #94a3b8; font-family: var(--font-sans-retro); margin: 12px 0;">
+        🤖 <em>The built-in Dynamic Difficulty Adjustment (DDA) AI will monitor your calculation speed and accuracy to calibrate questions for optimal challenge and flow!</em>
+      </p>
+      <button type="submit" class="btn-retro btn-retro-primary" style="width: 100%; padding: 12px; font-size: 11px;">
+        START BATTLE &amp; WIN PRIZES
+      </button>
+    </form>
+  </dialog>
+
+  <!-- 2. QUESTION CONSOLE MODAL -->
+  <dialog id="question-modal" closedby="closerequest" aria-labelledby="q-spell-badge">
+    <div class="dialog-header">
+      <span id="q-spell-badge" class="dialog-title">SPELL CASTING</span>
+      <div class="q-badge-row">
+        <span id="q-topic-badge" class="q-badge badge-topic">TOPIC: ARITHMETIC</span>
+      </div>
+    </div>
+    <div class="q-timer-container">
+      <div class="q-timer-bar-outer">
+        <div id="q-timer-bar" class="q-timer-bar-inner" style="width: 100%;"></div>
+      </div>
+      <span id="q-timer-text" class="q-timer-seconds">10s</span>
+    </div>
+    <div id="q-prompt" class="q-prompt-box">
+      <!-- Procedural question prompt rendered here -->
+    </div>
+    <div id="q-options-grid" class="q-options-grid">
+      <!-- 4 Multiple choice buttons injected here -->
+    </div>
+    <div id="q-hint-box" class="q-hint-box">
+      <strong>💡 AI TACTICAL HINT:</strong> <span id="q-hint-text"></span>
+    </div>
+  </dialog>
+
+  <!-- 3. HALL OF FAME LEADERBOARD MODAL -->
+  <dialog id="leaderboard-modal" closedby="any" aria-labelledby="hof-title">
+    <div class="dialog-header">
+      <h2 id="hof-title" class="dialog-title">🏆 HALL OF FAME</h2>
+      <button type="button" class="btn-retro btn-close-dialog">✕</button>
+    </div>
+    <div class="hof-table-wrap">
+      <table class="hof-table">
+        <thead>
+          <tr>
+            <th>RANK</th>
+            <th>CHALLENGER</th>
+            <th>TIER</th>
+            <th>COMBO</th>
+            <th>SCORE</th>
+          </tr>
+        </thead>
+        <tbody id="hof-table-body">
+          <!-- Populated from localStorage / game.js -->
+        </tbody>
+      </table>
+    </div>
+    <button type="button" class="btn-retro btn-close-dialog" style="width: 100%;">CLOSE</button>
+  </dialog>
+
+  <!-- 4. RULES & GUIDE MODAL -->
+  <dialog id="rules-modal" closedby="any" aria-labelledby="guide-title">
+    <div class="dialog-header">
+      <h2 id="guide-title" class="dialog-title">📖 HOW TO PLAY &amp; WIN</h2>
+      <button type="button" class="btn-retro btn-close-dialog">✕</button>
+    </div>
+    <div style="font-size: 10px; line-height: 1.8; color: #cbd5e1; display: flex; flex-direction: column; gap: 10px;">
+      <p><strong>1. Turn-Based Speed Math:</strong> On your turn, pick an attack spell. Each spell challenges a different mathematical skill!</p>
+      <ul style="padding-left: 20px; list-style-type: square;">
+        <li><strong style="color: #ef4444;">🔥 Fireball:</strong> Rapid arithmetic. High burst damage if answered within 10 seconds!</li>
+        <li><strong style="color: #0ea5e9;">🛡️ Aegis Shield:</strong> Identify primes, fractions, or percentages. Heals HP and blocks the boss's next strike!</li>
+        <li><strong style="color: #facc15;">⚡ Critical Strike:</strong> Solve algebraic linear equations for maximum critical damage!</li>
+        <li><strong style="color: #a855f7;">❄️ Time Warp:</strong> Predict number sequences to freeze the enemy for a turn!</li>
+      </ul>
+      <p><strong>2. Dynamic Difficulty Adjustment (DDA AI):</strong> The AI measures how fast you calculate. Speed streaks increase your difficulty tier, unlocking higher combo multipliers and bigger scores!</p>
+      <p><strong>3. Win Real Prizes:</strong> Defeat all 3 bosses (Vector Imp, Matrix Golem, and the Derivative Dragon) to generate your verified <strong>TEGAS Prize Claim Ticket</strong> with a real scannable QR verification code!</p>
+    </div>
+    <button type="button" class="btn-retro btn-close-dialog" style="margin-top: 14px; width: 100%;">LET'S BATTLE!</button>
+  </dialog>
+
+  <!-- SCRIPTS -->
+  <script src="svg-assets.js"></script>
+  <script src="audio.js"></script>
+  <script src="math-engine.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

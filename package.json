@@ -1,0 +1,21 @@
+{
+  "name": "tegas-ai-maths-rpg",
+  "version": "1.0.0",
+  "description": "Algorithm Boss Battle: Speed Math RPG with Dynamic Difficulty Adjustment (DDA) AI for TEGAS",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx -y serve -l 3000 ."
+  },
+  "keywords": [
+    "math",
+    "ai",
+    "rpg",
+    "gamification",
+    "tegas",
+    "speed-math",
+    "pixel-art",
+    "svg"
+  ],
+  "author": "TEGAS AI Challenge",
+  "license": "MIT"
+}
