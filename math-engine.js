@@ -417,6 +417,78 @@ const MathEngine = (() => {
     };
   }
 
+  // 5. RAPID ROAMING BOT SNIPE QUESTION (FAST 5-SECOND MINI BATTLE)
+  function generateBotSnipeQuestion() {
+    const tier = aiState.difficultyTier;
+    const ops = ['+', '-', '×', '÷'];
+    const chosenOp = ops[randInt(0, tier > 2 ? 3 : 2)];
+
+    let a, b, ans, prompt;
+    if (chosenOp === '+') {
+      a = randInt(12, 35 + tier * 10);
+      b = randInt(15, 40 + tier * 10);
+      ans = a + b;
+      prompt = `${a} + ${b} = ?`;
+    } else if (chosenOp === '-') {
+      ans = randInt(10, 30 + tier * 10);
+      b = randInt(8, 25 + tier * 5);
+      a = ans + b;
+      prompt = `${a} - ${b} = ?`;
+    } else if (chosenOp === '×') {
+      a = randInt(4, 9 + (tier > 3 ? 3 : 0));
+      b = randInt(3, 9 + (tier > 3 ? 3 : 0));
+      ans = a * b;
+      prompt = `${a} × ${b} = ?`;
+    } else {
+      // Division
+      ans = randInt(3, 9 + (tier > 3 ? 3 : 0));
+      b = randInt(3, 9);
+      a = ans * b;
+      prompt = `${a} ÷ ${b} = ?`;
+    }
+
+    const opts = new Set([ans]);
+    while (opts.size < 3) {
+      const offset = randInt(1, 4) * (Math.random() > 0.5 ? 1 : -1);
+      const fake = ans + offset;
+      if (fake > 0) opts.add(fake);
+    }
+    const options = shuffle(Array.from(opts));
+
+    return {
+      prompt,
+      answer: ans,
+      options,
+      correctIndex: options.indexOf(ans),
+      timeLimit: 5.5
+    };
+  }
+
+  // 6. ANCIENT CHEST LOCKPICK PUZZLE
+  function generateChestQuestion() {
+    const x = randInt(3, 12);
+    const m = randInt(2, 5);
+    const c = randInt(4, 15);
+    const rhs = m * x + c;
+
+    const prompt = `LOCK RUNES: Solve for x:\n${m}x + ${c} = ${rhs}`;
+    const opts = new Set([x]);
+    while (opts.size < 4) {
+      const offset = randInt(1, 3) * (Math.random() > 0.5 ? 1 : -1);
+      const fake = x + offset;
+      if (fake > 0) opts.add(fake);
+    }
+    const options = shuffle(Array.from(opts));
+
+    return {
+      prompt,
+      answer: x,
+      options,
+      correctIndex: options.indexOf(x),
+      timeLimit: 12
+    };
+  }
+
   // Helper to generate 4 distinct multiple-choice options around the answer
   function generateDistinctOptions(correctAnswer) {
     const opts = new Set([correctAnswer]);
@@ -451,6 +523,8 @@ const MathEngine = (() => {
     generateShieldQuestion,
     generateCriticalQuestion,
     generateFreezeQuestion,
+    generateBotSnipeQuestion,
+    generateChestQuestion,
     getAiState: () => ({ ...aiState })
   };
 })();

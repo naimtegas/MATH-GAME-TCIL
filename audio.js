@@ -280,6 +280,187 @@ const SoundEngine = (() => {
     osc.stop(audioCtx.currentTime + 0.45);
   }
 
+  // ANIME CUT-IN SWEEP
+  function playCutIn() {
+    if (isMuted) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1800, audioCtx.currentTime + 0.25);
+
+    gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.35);
+
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = createNoiseBuffer(0.2);
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+    noise.connect(noiseGain);
+    noiseGain.connect(audioCtx.destination);
+    noise.start();
+  }
+
+  // QTE MEGA CRITICAL TRIUMPH
+  function playQteMegaCrit() {
+    if (isMuted) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    // Dual layered power chord with resonant chime
+    [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((freq, idx) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = idx % 2 === 0 ? 'sawtooth' : 'square';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.04);
+
+      gain.gain.setValueAtTime(0.16, audioCtx.currentTime + idx * 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.04 + 0.35);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime + idx * 0.04);
+      osc.stop(audioCtx.currentTime + idx * 0.04 + 0.38);
+    });
+
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = createNoiseBuffer(0.4);
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+    noise.connect(noiseGain);
+    noiseGain.connect(audioCtx.destination);
+    noise.start();
+  }
+
+  function playQteHit() {
+    if (isMuted) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(220, audioCtx.currentTime + 0.12);
+
+    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.14);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.14);
+  }
+
+  // BOSS CHARGING PULSE
+  function playBossCharge() {
+    if (isMuted) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(240, audioCtx.currentTime + 0.5);
+
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.55);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.55);
+  }
+
+  // BOSS STAGGER / INTERRUPT CRASH
+  function playStagger() {
+    if (isMuted) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(70, audioCtx.currentTime + 0.4);
+
+    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.45);
+
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = createNoiseBuffer(0.5);
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+    noise.connect(noiseGain);
+    noiseGain.connect(audioCtx.destination);
+    noise.start();
+  }
+
+  // RELIC UNLOCK CHIME
+  function playRelicChime() {
+    if (isMuted) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    [440, 554.37, 659.25, 880, 1108.73].forEach((f, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, audioCtx.currentTime + i * 0.08);
+
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.08 + 0.3);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime + i * 0.08);
+      osc.stop(audioCtx.currentTime + i * 0.08 + 0.32);
+    });
+  }
+
+  // COMBO FANFARE (GOOD, SUPER, HYPER, GODLIKE)
+  function playComboFanfare(level) {
+    if (isMuted) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    let baseFreq = 400;
+    if (level === 'super') baseFreq = 550;
+    if (level === 'hyper') baseFreq = 700;
+    if (level === 'godlike') baseFreq = 900;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(baseFreq * 1.5, audioCtx.currentTime + 0.1);
+
+    gain.gain.setValueAtTime(0.14, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.16);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.16);
+  }
+
   // RETRO 8-BIT BGM GENERATOR
   // Loops a driving cyber-RPG arpeggio bassline using Web Audio API
   function startBgm() {
@@ -340,6 +521,13 @@ const SoundEngine = (() => {
     playVictory,
     playHypercharge,
     playEnrage,
+    playCutIn,
+    playQteMegaCrit,
+    playQteHit,
+    playBossCharge,
+    playStagger,
+    playRelicChime,
+    playComboFanfare,
     startBgm,
     stopBgm,
     toggleMute,

@@ -409,6 +409,76 @@ const SvgAssets = (() => {
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalPx} ${totalPx}" width="${size}" height="${size}" shape-rendering="crispEdges">${rects}</svg>`;
   }
 
+  // ANIME-STYLE CUT-IN EYE BANNER SVG
+  function getCutInEyesSvg() {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 60" width="100%" height="60" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="cutin-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ea2527" stop-opacity="0.95"/>
+          <stop offset="40%" stop-color="#12151f" stop-opacity="0.95"/>
+          <stop offset="70%" stop-color="#100e0c" stop-opacity="0.95"/>
+          <stop offset="100%" stop-color="#f9e60b" stop-opacity="0.95"/>
+        </linearGradient>
+      </defs>
+      <polygon points="0,0 400,0 370,60 0,60" fill="url(#cutin-bg)"/>
+      <line x1="0" y1="2" x2="400" y2="2" stroke="#f9e60b" stroke-width="2"/>
+      <line x1="0" y1="58" x2="370" y2="58" stroke="#ea2527" stroke-width="2"/>
+      <!-- Speed lines -->
+      <line x1="10" y1="15" x2="120" y2="15" stroke="#ffffff" stroke-width="1.5" opacity="0.6"/>
+      <line x1="40" y1="30" x2="200" y2="30" stroke="#f9e60b" stroke-width="2" opacity="0.8"/>
+      <line x1="15" y1="45" x2="150" y2="45" stroke="#ffffff" stroke-width="1.5" opacity="0.5"/>
+      <!-- Glowing Eyes -->
+      <polygon points="230,22 270,22 280,32 235,32" fill="#00f0ff" filter="drop-shadow(0 0 6px #00f0ff)"/>
+      <polygon points="295,32 340,22 350,22 305,32" fill="#00f0ff" filter="drop-shadow(0 0 6px #00f0ff)"/>
+      <polygon points="250,25 265,25 260,30 252,30" fill="#ffffff"/>
+      <polygon points="315,25 330,25 325,30 317,30" fill="#ffffff"/>
+    </svg>`;
+  }
+
+  // CYBER RELIC ICONS
+  function getRelicSvg(relicId, size = 48) {
+    if (relicId === 'nanite_edge') {
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="${size}" height="${size}" shape-rendering="crispEdges">
+        <rect x="7" y="1" width="2" height="10" fill="#f9e60b"/>
+        <rect x="6" y="3" width="4" height="2" fill="#ffffff"/>
+        <rect x="5" y="11" width="6" height="2" fill="#ea2527"/>
+        <rect x="7" y="13" width="2" height="3" fill="#38bdf8"/>
+      </svg>`;
+    } else if (relicId === 'kinetic_barrier') {
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="${size}" height="${size}" shape-rendering="crispEdges">
+        <rect x="2" y="2" width="12" height="12" fill="none" stroke="#38bdf8" stroke-width="2"/>
+        <rect x="5" y="5" width="6" height="6" fill="#06b6d4"/>
+        <rect x="7" y="7" width="2" height="2" fill="#ffffff"/>
+      </svg>`;
+    } else if (relicId === 'overclock_coil') {
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="${size}" height="${size}" shape-rendering="crispEdges">
+        <rect x="4" y="2" width="8" height="2" fill="#f9e60b"/>
+        <rect x="2" y="4" width="4" height="4" fill="#f97316"/>
+        <rect x="10" y="8" width="4" height="4" fill="#f97316"/>
+        <rect x="4" y="12" width="8" height="2" fill="#f9e60b"/>
+        <rect x="6" y="6" width="4" height="4" fill="#ffffff"/>
+      </svg>`;
+    } else if (relicId === 'vampiric_equations') {
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="${size}" height="${size}" shape-rendering="crispEdges">
+        <rect x="4" y="3" width="8" height="2" fill="#ea2527"/>
+        <rect x="3" y="5" width="10" height="4" fill="#ef4444"/>
+        <rect x="5" y="9" width="6" height="4" fill="#b91c1c"/>
+        <rect x="7" y="13" width="2" height="2" fill="#7f1d1d"/>
+        <rect x="6" y="5" width="4" height="2" fill="#ffffff"/>
+      </svg>`;
+    } else {
+      // chronos_shard
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="${size}" height="${size}" shape-rendering="crispEdges">
+        <rect x="4" y="2" width="8" height="2" fill="#a855f7"/>
+        <rect x="3" y="4" width="10" height="2" fill="#c084fc"/>
+        <rect x="5" y="6" width="6" height="4" fill="#e9d5ff"/>
+        <rect x="7" y="7" width="2" height="2" fill="#ffffff"/>
+        <rect x="3" y="10" width="10" height="2" fill="#c084fc"/>
+        <rect x="4" y="12" width="8" height="2" fill="#a855f7"/>
+      </svg>`;
+    }
+  }
+
   // PUBLIC SPRITE GETTERS
   return {
     getHeroSprite: (pose = 'idle', scale = 5) => {
@@ -431,7 +501,9 @@ const SvgAssets = (() => {
     getManaSvg,
     getTrophySvg,
     getTicketSvg,
-    generateTicketQrSvg
+    generateTicketQrSvg,
+    getCutInEyesSvg,
+    getRelicSvg
   };
 })();
 

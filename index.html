@@ -33,9 +33,75 @@
   <main class="app-container">
 
     <!-- ==========================================
-         VIEW 1: BATTLE VIEW (ACTIVE COMBAT)
+         VIEW 0: CASTLE EXPLORATION (TOP-DOWN 2D DUNGEON)
+         "Skyrim in 8-bit Retro Math RPG"
          ========================================== -->
-    <div id="view-battle" class="game-view active-view">
+    <div id="view-castle" class="game-view active-view">
+
+      <!-- CASTLE ROOM BANNER (SKYRIM-STYLE LOCATION DISCOVERY) -->
+      <div id="castle-room-banner" class="castle-room-banner" style="display: none;">
+        <span class="castle-realm-tag">★ TEGAS CASTLE OF MATHEMATICS ★</span>
+        <h2 id="castle-room-title">WING I: THE GLITCH CRYPTS</h2>
+        <p id="castle-room-subtitle">Clear roaming bots &amp; breach the Vector Imp Sanctuary</p>
+      </div>
+
+      <!-- CASTLE TOP HUD BAR -->
+      <section class="castle-hud-bar" aria-label="Castle Exploration HUD">
+        <div class="hud-left-group">
+          <span class="hud-player-badge">🧙‍♂️ <span id="castle-player-name">CYBER MAGE</span></span>
+          <div class="hud-hp-wrap">
+            <span class="hud-hp-label">HP:</span>
+            <div class="hud-hp-bar-outer">
+              <div id="castle-hp-bar" class="hud-hp-bar-inner" style="width: 100%;"></div>
+            </div>
+            <span id="castle-hp-text" class="hud-hp-val">100/100</span>
+          </div>
+        </div>
+        <div class="hud-right-group">
+          <span class="hud-gold-tag">🪙 GOLD: <strong id="castle-coins-val">0</strong></span>
+          <span class="hud-wing-badge" id="castle-wing-tag">WING 1/3</span>
+        </div>
+      </section>
+
+      <!-- CASTLE CANVAS CONTAINER -->
+      <section class="castle-canvas-container" aria-label="Castle Dungeon Crawler Stage">
+        <!-- Interactive Proximity Prompt -->
+        <div id="castle-action-prompt" class="castle-action-prompt" style="display: none;">
+          <span>⚔️ PRESS [SPACE] / TAP TO ENTER BOSS SANCTUARY</span>
+        </div>
+
+        <canvas id="castle-canvas"></canvas>
+
+        <!-- CASTLE CONTROLS OVERLAY (DESKTOP & TOUCH VIRTUAL D-PAD) -->
+        <div class="castle-controls-overlay">
+          <div class="castle-keyboard-hint">
+            <span>🎮 <strong>MOVE:</strong> WASD / ARROW KEYS</span>
+            <span>⚡ <strong>INTERACT / STRIKE:</strong> SPACE / E</span>
+            <span>🎯 <strong>FAST SNIPE:</strong> 1, 2, 3</span>
+          </div>
+
+          <!-- Mobile Touch Virtual D-Pad -->
+          <div class="mobile-dpad-container">
+            <div class="dpad-cross">
+              <button id="dpad-up" type="button" class="dpad-btn dpad-up" aria-label="Move Up">▲</button>
+              <div class="dpad-mid-row">
+                <button id="dpad-left" type="button" class="dpad-btn dpad-left" aria-label="Move Left">◀</button>
+                <div class="dpad-center"></div>
+                <button id="dpad-right" type="button" class="dpad-btn dpad-right" aria-label="Move Right">▶</button>
+              </div>
+              <button id="dpad-down" type="button" class="dpad-btn dpad-down" aria-label="Move Down">▼</button>
+            </div>
+            <button id="dpad-action" type="button" class="dpad-btn-action" aria-label="Interact / Action">⚔️ ACTION</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ==========================================
+         VIEW 1: BATTLE VIEW (ACTIVE COMBAT ARENA)
+         ========================================== -->
+    <div id="view-battle" class="game-view" style="display: none;">
 
       <!-- DDA AI ENGINE STATUS BAR -->
       <section class="ai-status-panel" aria-label="AI Master System Status">
@@ -77,12 +143,44 @@
         <!-- ARENA STAGE -->
         <div id="arena-stage" class="arena-stage arena-catacombs">
           
+          <!-- ANIME CUT-IN OVERLAY -->
+          <div id="anime-cutin" class="anime-cutin-layer" style="display: none;">
+            <div class="cutin-slant">
+              <div id="cutin-svg-box" class="cutin-svg-box"></div>
+              <div class="cutin-info">
+                <span id="cutin-text-main" class="cutin-title">⚡ CRITICAL FOCUS!</span>
+                <span id="cutin-text-sub" class="cutin-subtitle">TEGAS OVERDRIVE STRIKE</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- QTE TIMING BAR -->
+          <div id="qte-container" class="qte-container" style="display: none;">
+            <div class="qte-card">
+              <div class="qte-top">
+                <span class="qte-title">⚡ MEGA-CRIT TIMING STRIKE! ⚡</span>
+                <span class="qte-inst">HIT SWEET SPOT (SPACE OR TAP)</span>
+              </div>
+              <div class="qte-track-outer">
+                <div id="qte-zone-crit" class="qte-zone-crit"></div>
+                <div id="qte-cursor" class="qte-cursor"></div>
+              </div>
+              <button id="btn-qte-hit" type="button" class="btn-qte-hit">💥 STRIKE! [SPACE]</button>
+            </div>
+          </div>
+
+          <!-- ARCADE COMBO CALLOUT -->
+          <div id="arcade-combo-callout" class="arcade-combo-callout" style="display: none;">
+            <div id="arcade-combo-badge" class="arcade-stamp">SUPER!</div>
+          </div>
+
           <!-- PLAYER HERO SECTION (LEFT) -->
           <div class="combatant combatant-player">
             <div class="combatant-info">
               <h2 id="hero-name" class="combatant-name" tabindex="-1">CYBER MAGE</h2>
               <span id="hero-grade-tag" class="combatant-subtitle">Intermediate Mage</span>
               <div class="hp-bar-outer" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                <div id="hero-hp-ghost" class="hp-bar-ghost"></div>
                 <div id="hero-hp-bar" class="hp-bar-inner" style="width: 100%;"></div>
               </div>
               <span id="hero-hp-text" class="hp-text">100 / 100 HP</span>
@@ -93,12 +191,42 @@
             </div>
           </div>
 
+          <!-- IN-ARENA HOLOGRAPHIC MATH CONSOLE (SEAMLESS COMBAT) -->
+          <div id="arena-holo-console" class="arena-holo-console" style="display: none;">
+            <div class="holo-header">
+              <span id="holo-spell-tag" class="holo-badge">🔥 FIREBALL</span>
+              <div class="holo-timer-wrap">
+                <span class="holo-timer-icon">⏳</span>
+                <div class="holo-timer-bar-outer">
+                  <div id="holo-timer-bar" class="holo-timer-bar-inner" style="width: 100%;"></div>
+                </div>
+                <span id="holo-timer-text" class="holo-timer-val">10s</span>
+              </div>
+            </div>
+            <div class="holo-prompt-box">
+              <div id="holo-prompt-text" class="holo-prompt-text">14 × 6 - 29 = ?</div>
+              <div id="holo-hint-box" class="holo-hint-box" style="display: none;">
+                💡 <span id="holo-hint-text"></span>
+              </div>
+            </div>
+          </div>
+
           <!-- BOSS MONSTER SECTION (RIGHT) -->
           <div class="combatant combatant-boss">
             <div class="combatant-info">
+              <div id="boss-charge-box" class="boss-charge-box" style="display: none;">
+                <div class="charge-header">
+                  <span id="charge-spell-name">⚠️ CHARGING: NOVA</span>
+                  <span id="charge-timer-val">4.5s</span>
+                </div>
+                <div class="charge-bar-outer">
+                  <div id="charge-bar-inner" class="charge-bar-inner"></div>
+                </div>
+              </div>
               <h2 id="boss-name" class="combatant-name">VECTOR IMP</h2>
               <span id="boss-subtitle" class="combatant-subtitle">The Glitch Sprite (ROUND 1/3)</span>
               <div class="hp-bar-outer" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                <div id="boss-hp-ghost" class="hp-bar-ghost"></div>
                 <div id="boss-hp-bar" class="hp-bar-inner boss-bar" style="width: 100%;"></div>
               </div>
               <span id="boss-hp-text" class="hp-text">220 / 220 HP</span>
@@ -118,16 +246,24 @@
         </div>
       </section>
 
-      <!-- SPELL ACTION DECK (CONTROLS) -->
+      <!-- ACTIVE CYBER RELICS BAR -->
+      <section id="active-relics-bar" class="active-relics-bar" style="display: none;" aria-label="Equipped Cyber Relics">
+        <span class="relic-bar-label">⚡ CYBER RELICS:</span>
+        <div id="relics-list" class="relics-list"></div>
+      </section>
+
+      <!-- SEAMLESS ACTION DECK (DUAL MODE: SPELLS & IN-ARENA OPTIONS) -->
       <section class="action-deck" aria-label="Spell Action Deck">
         <div class="deck-header">
-          <span>SELECT YOUR MATH ATTACK</span>
+          <span id="deck-title-text">SELECT YOUR MATH ATTACK</span>
           <span id="turn-indicator">TURN: PLAYER</span>
         </div>
-        <div class="spell-grid">
+
+        <!-- MODE 1: SPELL SELECTION GRID -->
+        <div id="deck-spell-grid" class="spell-grid">
 
           <!-- SPELL 1: FIREBALL -->
-          <button id="spell-fireball" type="button" class="spell-card card-fire">
+          <button id="spell-fireball" type="button" class="spell-card card-fire" aria-label="Cast Fireball">
             <div class="spell-icon-box" id="icon-fireball"></div>
             <div class="spell-info">
               <span class="spell-title">🔥 FIREBALL</span>
@@ -137,7 +273,7 @@
           </button>
 
           <!-- SPELL 2: SHIELD -->
-          <button id="spell-shield" type="button" class="spell-card card-shield">
+          <button id="spell-shield" type="button" class="spell-card card-shield" aria-label="Cast Aegis Shield">
             <div class="spell-icon-box" id="icon-shield"></div>
             <div class="spell-info">
               <span class="spell-title">🛡️ AEGIS SHIELD</span>
@@ -147,17 +283,17 @@
           </button>
 
           <!-- SPELL 3: CRITICAL STRIKE -->
-          <button id="spell-critical" type="button" class="spell-card card-critical">
+          <button id="spell-critical" type="button" class="spell-card card-critical" aria-label="Cast Critical Strike">
             <div class="spell-icon-box" id="icon-critical"></div>
             <div class="spell-info">
               <span class="spell-title">⚡ CRITICAL STRIKE</span>
               <span class="spell-desc">Solve Algebraic Equations</span>
-              <span class="spell-stat">Heavy DMG • Bonus Multiplier</span>
+              <span class="spell-stat">Heavy DMG • QTE Mega-Crit</span>
             </div>
           </button>
 
           <!-- SPELL 4: TIME WARP -->
-          <button id="spell-freeze" type="button" class="spell-card card-freeze">
+          <button id="spell-freeze" type="button" class="spell-card card-freeze" aria-label="Cast Time Warp">
             <div class="spell-icon-box" id="icon-freeze"></div>
             <div class="spell-info">
               <span class="spell-title">❄️ TIME WARP</span>
@@ -167,6 +303,18 @@
           </button>
 
         </div>
+
+        <!-- MODE 2: IN-ARENA SEAMLESS MATH OPTIONS GRID -->
+        <div id="deck-math-options-container" class="deck-math-options-container" style="display: none;">
+          <div id="deck-options-grid" class="deck-options-grid">
+            <!-- Dynamically injected 4 multiple choice buttons -->
+          </div>
+          <div class="deck-options-footer">
+            <button id="btn-cancel-spell" type="button" class="btn-retro btn-cancel-spell">↩️ CHANGE SPELL</button>
+            <span class="hotkey-tip">💡 TIP: PRESS 1, 2, 3, 4 OR A, B, C, D ON KEYBOARD</span>
+          </div>
+        </div>
+
       </section>
 
     </div>
@@ -564,10 +712,25 @@
     <button type="button" class="btn-retro btn-close-dialog" style="margin-top: 14px; width: 100%;">LET'S BATTLE!</button>
   </dialog>
 
+  <!-- 5. CYBER RELIC SELECTION MODAL (ROGUE-LITE POWER-UPS) -->
+  <dialog id="relic-modal" closedby="closerequest" aria-labelledby="relic-title">
+    <div class="dialog-header">
+      <h2 id="relic-title" class="dialog-title">💎 CHOOSE A CYBER RELIC</h2>
+      <span class="badge-tag" style="background: #f9e60b; color: #100e0c; font-weight: bold;">RUN UPGRADE</span>
+    </div>
+    <p style="font-size: 10px; color: #cbd5e1; margin-bottom: 12px; font-family: var(--font-sans-retro);">
+      Select 1 passive computational relic to empower your spellcasting for this tournament run:
+    </p>
+    <div id="relic-options-grid" class="relic-options-grid">
+      <!-- 3 Relic cards dynamically injected -->
+    </div>
+  </dialog>
+
   <!-- SCRIPTS -->
   <script src="svg-assets.js"></script>
   <script src="audio.js"></script>
   <script src="math-engine.js"></script>
+  <script src="castle-engine.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

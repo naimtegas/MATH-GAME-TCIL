@@ -58,6 +58,35 @@ const GameApp = (() => {
     }
   ];
 
+  // Cyber Relics Catalog (Rogue-lite Run Modifiers)
+  const RELICS = {
+    nanite_edge: {
+      id: 'nanite_edge',
+      name: 'Nanite Edge',
+      desc: '+35% bonus spell damage when solving under 3.5 seconds!'
+    },
+    kinetic_barrier: {
+      id: 'kinetic_barrier',
+      name: 'Kinetic Barrier',
+      desc: 'Start every boss battle with +50 Shield Points!'
+    },
+    overclock_coil: {
+      id: 'overclock_coil',
+      name: 'Overclock Coil',
+      desc: 'QTE sweet spot is 60% wider & Mega-Crit deals +50% extra damage!'
+    },
+    vampiric_equations: {
+      id: 'vampiric_equations',
+      name: 'Vampiric Equations',
+      desc: 'Every correct calculation drains boss energy and heals you for +15 HP!'
+    },
+    chronos_shard: {
+      id: 'chronos_shard',
+      name: 'Chronos Shard',
+      desc: 'Freezes question timer completely for the first 3 seconds!'
+    }
+  };
+
   // Game state
   let state = {
     playerName: 'Cyber Mage',
@@ -84,7 +113,16 @@ const GameApp = (() => {
     allocatedTime: 10,
     ticketId: '',
     isHypercharge: false,
-    isEnraged: false
+    isEnraged: false,
+    isMegaCrit: false,
+    relics: [],
+    bossCharging: false,
+    bossChargeRemaining: 0,
+    bossChargeMax: 5.0,
+    bossChargeInterval: null,
+    qteActive: false,
+    qtePos: 0,
+    onQteHit: null
   };
 
   // DOM Elements cache
@@ -112,9 +150,24 @@ const GameApp = (() => {
   function cacheDom() {
     dom = {
       // Screens & Dedicated Views
+      viewCastle: document.getElementById('view-castle'),
       viewBattle: document.getElementById('view-battle'),
       viewVictory: document.getElementById('view-victory'),
       viewDefeat: document.getElementById('view-defeat'),
+
+      // Castle Exploration HUD & Controls
+      castleCanvas: document.getElementById('castle-canvas'),
+      castlePlayerName: document.getElementById('castle-player-name'),
+      castleHpBar: document.getElementById('castle-hp-bar'),
+      castleHpText: document.getElementById('castle-hp-text'),
+      castleCoinsVal: document.getElementById('castle-coins-val'),
+      castleWingTag: document.getElementById('castle-wing-tag'),
+      castleActionPrompt: document.getElementById('castle-action-prompt'),
+      dpadUp: document.getElementById('dpad-up'),
+      dpadDown: document.getElementById('dpad-down'),
+      dpadLeft: document.getElementById('dpad-left'),
+      dpadRight: document.getElementById('dpad-right'),
+      dpadAction: document.getElementById('dpad-action'),
 
       // Modals
       startModal: document.getElementById('start-modal'),
@@ -132,14 +185,58 @@ const GameApp = (() => {
       heroName: document.getElementById('hero-name'),
       heroGradeTag: document.getElementById('hero-grade-tag'),
       heroHpBar: document.getElementById('hero-hp-bar'),
+      heroHpGhost: document.getElementById('hero-hp-ghost'),
       heroHpText: document.getElementById('hero-hp-text'),
       heroShieldBadge: document.getElementById('hero-shield-badge'),
       bossHpBar: document.getElementById('boss-hp-bar'),
+      bossHpGhost: document.getElementById('boss-hp-ghost'),
       bossHpText: document.getElementById('boss-hp-text'),
       bossName: document.getElementById('boss-name'),
       bossSubtitle: document.getElementById('boss-subtitle'),
       combatLog: document.getElementById('combat-log-text'),
       turnIndicator: document.getElementById('turn-indicator'),
+
+      // In-Arena Holographic HUD
+      arenaHoloConsole: document.getElementById('arena-holo-console'),
+      holoSpellTag: document.getElementById('holo-spell-tag'),
+      holoTimerBar: document.getElementById('holo-timer-bar'),
+      holoTimerText: document.getElementById('holo-timer-text'),
+      holoPromptText: document.getElementById('holo-prompt-text'),
+      holoHintBox: document.getElementById('holo-hint-box'),
+      holoHintText: document.getElementById('holo-hint-text'),
+
+      // Boss Charge Box
+      bossChargeBox: document.getElementById('boss-charge-box'),
+      chargeSpellName: document.getElementById('charge-spell-name'),
+      chargeTimerVal: document.getElementById('charge-timer-val'),
+      chargeBarInner: document.getElementById('charge-bar-inner'),
+
+      // Action Deck Dual Mode
+      deckTitleText: document.getElementById('deck-title-text'),
+      deckSpellGrid: document.getElementById('deck-spell-grid'),
+      deckMathOptionsContainer: document.getElementById('deck-math-options-container'),
+      deckOptionsGrid: document.getElementById('deck-options-grid'),
+      btnCancelSpell: document.getElementById('btn-cancel-spell'),
+
+      // Anime Cut-in & QTE & Combo Callout
+      animeCutin: document.getElementById('anime-cutin'),
+      cutinSvgBox: document.getElementById('cutin-svg-box'),
+      cutinTextMain: document.getElementById('cutin-text-main'),
+      cutinTextSub: document.getElementById('cutin-text-sub'),
+
+      qteContainer: document.getElementById('qte-container'),
+      qteZoneCrit: document.getElementById('qte-zone-crit'),
+      qteCursor: document.getElementById('qte-cursor'),
+      btnQteHit: document.getElementById('btn-qte-hit'),
+
+      arcadeComboCallout: document.getElementById('arcade-combo-callout'),
+      arcadeComboBadge: document.getElementById('arcade-combo-badge'),
+
+      // Relics
+      activeRelicsBar: document.getElementById('active-relics-bar'),
+      relicsList: document.getElementById('relics-list'),
+      relicModal: document.getElementById('relic-modal'),
+      relicOptionsGrid: document.getElementById('relic-options-grid'),
 
       // HUD & DDA AI
       scoreDisplay: document.getElementById('score-val'),
@@ -176,7 +273,7 @@ const GameApp = (() => {
 
   // VIEW TRANSITIONS WITH ACCESSIBILITY ROUTING (Same Document Transitions API)
   function switchView(targetViewId) {
-    const views = ['view-battle', 'view-victory', 'view-defeat'];
+    const views = ['view-castle', 'view-battle', 'view-victory', 'view-defeat'];
 
     const updateDOM = () => {
       views.forEach(id => {
@@ -215,6 +312,8 @@ const GameApp = (() => {
       document.getElementById('defeat-heading')?.focus();
     } else if (viewId === 'view-battle') {
       dom.heroName?.focus();
+    } else if (viewId === 'view-castle') {
+      dom.castleCanvas?.focus();
     }
   }
 
@@ -344,11 +443,99 @@ const GameApp = (() => {
       });
     }
 
+    // Cancel Spell button
+    if (dom.btnCancelSpell) {
+      dom.btnCancelSpell.addEventListener('click', () => {
+        window.SoundEngine.playBlip();
+        cancelCurrentSpell();
+      });
+    }
+
+    // QTE Strike Button
+    if (dom.btnQteHit) {
+      dom.btnQteHit.addEventListener('click', () => {
+        if (state.onQteHit) state.onQteHit();
+      });
+    }
+
+    // Global Action Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      // Spacebar QTE Hit
+      if (state.qteActive && (e.code === 'Space' || e.key === ' ')) {
+        e.preventDefault();
+        if (state.onQteHit) state.onQteHit();
+        return;
+      }
+
+      // In-Arena Math Option Selection (1, 2, 3, 4 or A, B, C, D)
+      if (state.isTurnLocked && state.currentQuestion && dom.deckMathOptionsContainer && dom.deckMathOptionsContainer.style.display !== 'none') {
+        const key = e.key.toLowerCase();
+        if (key === '1' || key === 'a') {
+          e.preventDefault();
+          handleOptionChosen(0);
+        } else if (key === '2' || key === 'b') {
+          e.preventDefault();
+          handleOptionChosen(1);
+        } else if (key === '3' || key === 'c') {
+          e.preventDefault();
+          handleOptionChosen(2);
+        } else if (key === '4' || key === 'd') {
+          e.preventDefault();
+          handleOptionChosen(3);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          cancelCurrentSpell();
+        }
+      }
+    });
+
     // Print Voucher Button
     const btnPrint = document.getElementById('btn-print-voucher');
     if (btnPrint) {
       btnPrint.addEventListener('click', () => {
         window.print();
+      });
+    }
+
+    // Castle Exploration Mobile/Tablet Touch D-Pad Events
+    const dpadButtons = [
+      { el: dom.dpadUp, dir: 'up' },
+      { el: dom.dpadDown, dir: 'down' },
+      { el: dom.dpadLeft, dir: 'left' },
+      { el: dom.dpadRight, dir: 'right' }
+    ];
+
+    dpadButtons.forEach(({ el, dir }) => {
+      if (!el) return;
+      const press = (e) => {
+        e.preventDefault();
+        if (window.CastleEngine) window.CastleEngine.handleDpadPress(dir, true);
+      };
+      const release = (e) => {
+        e.preventDefault();
+        if (window.CastleEngine) window.CastleEngine.handleDpadPress(dir, false);
+      };
+      el.addEventListener('mousedown', press);
+      el.addEventListener('mouseup', release);
+      el.addEventListener('mouseleave', release);
+      el.addEventListener('touchstart', press, { passive: false });
+      el.addEventListener('touchend', release, { passive: false });
+    });
+
+    if (dom.dpadAction) {
+      dom.dpadAction.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (window.CastleEngine) window.CastleEngine.handleDpadPress('action', true);
+      });
+      dom.dpadAction.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (window.CastleEngine) window.CastleEngine.handleDpadPress('action', true);
+      }, { passive: false });
+    }
+
+    if (dom.castleActionPrompt) {
+      dom.castleActionPrompt.addEventListener('click', () => {
+        if (window.CastleEngine) window.CastleEngine.handleDpadPress('action', true);
       });
     }
   }
@@ -387,6 +574,10 @@ const GameApp = (() => {
     state.ticketId = generateClaimToken();
     state.isHypercharge = false;
     state.isEnraged = false;
+    state.isMegaCrit = false;
+    state.relics = [];
+    updateRelicsBar();
+
     if (dom.battleContainer) dom.battleContainer.classList.remove('hypercharge-active');
     if (dom.hyperchargeBanner) dom.hyperchargeBanner.style.display = 'none';
     if (dom.bossEnrageBanner) dom.bossEnrageBanner.style.display = 'none';
@@ -403,12 +594,76 @@ const GameApp = (() => {
     }
 
     updatePlayerStats();
-    loadBoss(0);
-    switchView('view-battle');
-    logMessage(`⚔️ BATTLE START! ${state.playerName} enters the arena against ${BOSSES[0].name}!`);
+
+    if (window.CastleEngine && dom.castleCanvas) {
+      window.CastleEngine.init(dom.castleCanvas);
+      window.CastleEngine.setPlayerHp(state.playerHp);
+      window.CastleEngine.loadWing(1);
+      window.CastleEngine.startLoop();
+      updateCastleHud();
+      switchView('view-castle');
+      logMessage(`🏰 CASTLE EXPLORATION! Explore the halls, defeat roaming bots, and breach the Boss Chambers!`);
+    } else {
+      loadBoss(0);
+      switchView('view-battle');
+      logMessage(`⚔️ BATTLE START! ${state.playerName} enters the arena against ${BOSSES[0].name}!`);
+    }
+
     window.SoundEngine.playBlip();
 
-    if (dom.startModal.open) dom.startModal.close();
+    if (dom.startModal && dom.startModal.open) dom.startModal.close();
+  }
+
+  function updateCastleHud() {
+    if (dom.castlePlayerName) dom.castlePlayerName.textContent = state.playerName.toUpperCase();
+    const pct = Math.max(0, Math.round((state.playerHp / state.playerMaxHp) * 100));
+    if (dom.castleHpBar) dom.castleHpBar.style.width = `${pct}%`;
+    if (dom.castleHpText) dom.castleHpText.textContent = `${state.playerHp}/${state.playerMaxHp} HP`;
+    if (dom.castleCoinsVal) dom.castleCoinsVal.textContent = state.score.toLocaleString();
+    if (dom.castleWingTag) dom.castleWingTag.textContent = `WING ${state.currentBossIdx + 1}/3`;
+  }
+
+  function addExplorationScore(points) {
+    state.score += points;
+    updateCastleHud();
+    if (dom.scoreDisplay) dom.scoreDisplay.textContent = state.score.toLocaleString();
+  }
+
+  function syncHeroHp(hp) {
+    state.playerHp = Math.max(0, Math.min(state.playerMaxHp, hp));
+    updateCastleHud();
+    updatePlayerStats();
+    if (state.playerHp <= 0) {
+      showDefeatPage();
+    }
+  }
+
+  function transitionToBossArena(bossIdx) {
+    if (window.CastleEngine) {
+      window.CastleEngine.stopLoop();
+    }
+    state.currentBossIdx = bossIdx;
+    loadBoss(bossIdx);
+    updatePlayerStats();
+    switchView('view-battle');
+    triggerAnimeCutIn('⚠️ BOSS SANCTUARY! ⚠️', `${BOSSES[bossIdx].name} CHALLENGES YOU!`);
+    logMessage(`⚔️ BOSS ENCOUNTER! ${state.playerName} enters the sanctum of [${BOSSES[bossIdx].name}]!`);
+  }
+
+  function returnToCastleAfterBoss() {
+    state.isTurnLocked = false;
+    stopBossChargeTelegraph();
+    switchView('view-castle');
+    if (window.CastleEngine) {
+      window.CastleEngine.setPlayerHp(state.playerHp);
+      window.CastleEngine.unlockNextWing();
+      window.CastleEngine.startLoop();
+    }
+    updateCastleHud();
+    logMessage(`🏰 Conquered Boss ${state.currentBossIdx}! Wing ${state.currentBossIdx + 1} unlocked. Explore the halls!`);
+    setTimeout(() => {
+      openRelicModal();
+    }, 600);
   }
 
   function loadBoss(idx) {
@@ -418,13 +673,28 @@ const GameApp = (() => {
     state.bossHp = boss.maxHp;
     state.isFrozen = false;
     state.isEnraged = false;
+    stopBossChargeTelegraph();
+
     if (dom.bossSprite) dom.bossSprite.classList.remove('boss-enraged');
     if (dom.bossEnrageBanner) dom.bossEnrageBanner.style.display = 'none';
+
+    // Relic perk: Kinetic Barrier (+50 starting shield)
+    if (hasRelic('kinetic_barrier')) {
+      state.playerShield = Math.max(state.playerShield, 50);
+      updatePlayerStats();
+    }
 
     // Arena styling
     dom.arenaStage.className = `arena-stage ${boss.bgClass}`;
     updateBossDisplay();
     logMessage(`⚡ A formidable foe emerges: [${boss.name}] - "${boss.introQuote}"`);
+
+    // Reward: prompt Cyber Relic selection on round transitions (Boss 2 and Boss 3)
+    if (idx > 0) {
+      setTimeout(() => {
+        openRelicModal();
+      }, 700);
+    }
   }
 
   function updateBossDisplay() {
@@ -446,12 +716,24 @@ const GameApp = (() => {
     const pct = Math.max(0, Math.round((state.bossHp / state.bossMaxHp) * 100));
     dom.bossHpBar.style.width = `${pct}%`;
     dom.bossHpText.textContent = `${state.bossHp} / ${state.bossMaxHp} HP`;
+
+    if (dom.bossHpGhost) {
+      setTimeout(() => {
+        if (dom.bossHpGhost) dom.bossHpGhost.style.width = `${pct}%`;
+      }, 250);
+    }
   }
 
   function updatePlayerStats() {
     const pct = Math.max(0, Math.round((state.playerHp / state.playerMaxHp) * 100));
     dom.heroHpBar.style.width = `${pct}%`;
     dom.heroHpText.textContent = `${state.playerHp} / ${state.playerMaxHp} HP`;
+
+    if (dom.heroHpGhost) {
+      setTimeout(() => {
+        if (dom.heroHpGhost) dom.heroHpGhost.style.width = `${pct}%`;
+      }, 250);
+    }
 
     if (state.playerShield > 0) {
       dom.heroShieldBadge.style.display = 'inline-flex';
@@ -479,7 +761,230 @@ const GameApp = (() => {
     }
   }
 
-  // SPELL SELECTION & QUESTION TRIGGER
+  // RELICS SYSTEM HELPERS
+  function hasRelic(id) {
+    return state.relics && state.relics.includes(id);
+  }
+
+  function openRelicModal() {
+    if (!dom.relicModal || !dom.relicOptionsGrid) return;
+    window.SoundEngine.playRelicChime();
+    dom.relicOptionsGrid.innerHTML = '';
+
+    const allKeys = Object.keys(RELICS);
+    const available = allKeys.filter(k => !state.relics.includes(k));
+    const choices = (available.length > 0 ? available : allKeys).sort(() => 0.5 - Math.random()).slice(0, 3);
+
+    choices.forEach(key => {
+      const relic = RELICS[key];
+      const card = document.createElement('div');
+      card.className = 'relic-card';
+      const iconSvg = window.SvgAssets.getRelicSvg ? window.SvgAssets.getRelicSvg(relic.id, 44) : '💎';
+      card.innerHTML = `
+        <div class="relic-icon-box">${iconSvg}</div>
+        <span class="relic-title">${relic.name}</span>
+        <span class="relic-desc">${relic.desc}</span>
+        <button type="button" class="btn-retro btn-retro-gold" style="width: 100%; margin-top: 6px;">EQUIP RELIC</button>
+      `;
+      card.addEventListener('click', () => {
+        equipRelic(relic.id);
+        dom.relicModal.close();
+      });
+      dom.relicOptionsGrid.appendChild(card);
+    });
+
+    try {
+      dom.relicModal.showModal();
+    } catch (e) {}
+  }
+
+  function equipRelic(id) {
+    if (!state.relics.includes(id)) {
+      state.relics.push(id);
+    }
+    window.SoundEngine.playCorrect();
+    updateRelicsBar();
+    showFloatingText(dom.heroSprite, `💎 RELIC: ${RELICS[id].name}!`, '#f9e60b');
+    logMessage(`💎 CYBER RELIC EQUIPPED: [${RELICS[id].name}] — ${RELICS[id].desc}`);
+  }
+
+  function updateRelicsBar() {
+    if (!dom.activeRelicsBar || !dom.relicsList) return;
+    if (!state.relics || state.relics.length === 0) {
+      dom.activeRelicsBar.style.display = 'none';
+      return;
+    }
+    dom.activeRelicsBar.style.display = 'flex';
+    dom.relicsList.innerHTML = '';
+    state.relics.forEach(id => {
+      const r = RELICS[id];
+      if (r) {
+        const chip = document.createElement('span');
+        chip.className = 'relic-chip';
+        chip.innerHTML = `💎 <strong>${r.name}</strong>`;
+        chip.title = r.desc;
+        dom.relicsList.appendChild(chip);
+      }
+    });
+  }
+
+  // BOSS CHARGE (DOOM GAUGE) MECHANIC
+  function startBossChargeTelegraph() {
+    if (state.isFrozen || state.bossHp <= 0) return;
+    state.bossCharging = true;
+    state.bossChargeMax = 5.0;
+    state.bossChargeRemaining = 5.0;
+
+    const boss = BOSSES[state.currentBossIdx];
+    const doomSpells = ['GLITCH NOVA', 'BINARY CATACLYSM', 'ASYMPTOTE OBLIVION'];
+    const spellName = doomSpells[state.currentBossIdx] || 'DOOM CANNON';
+
+    if (dom.bossChargeBox) dom.bossChargeBox.style.display = 'flex';
+    if (dom.chargeSpellName) dom.chargeSpellName.textContent = `⚠️ CHARGING: ${spellName}`;
+    if (dom.chargeTimerVal) dom.chargeTimerVal.textContent = `${state.bossChargeRemaining.toFixed(1)}s`;
+    if (dom.chargeBarInner) dom.chargeBarInner.style.width = '0%';
+
+    window.SoundEngine.playBossCharge();
+
+    if (state.bossChargeInterval) clearInterval(state.bossChargeInterval);
+    const startT = Date.now();
+
+    state.bossChargeInterval = setInterval(() => {
+      const elapsed = (Date.now() - startT) / 1000;
+      state.bossChargeRemaining = Math.max(0, state.bossChargeMax - elapsed);
+      const pct = (elapsed / state.bossChargeMax) * 100;
+      if (dom.chargeBarInner) dom.chargeBarInner.style.width = `${Math.min(100, pct)}%`;
+      if (dom.chargeTimerVal) dom.chargeTimerVal.textContent = `${state.bossChargeRemaining.toFixed(1)}s`;
+
+      if (state.bossChargeRemaining <= 0) {
+        clearInterval(state.bossChargeInterval);
+        state.bossChargeInterval = null;
+        logMessage(`⚠️ ${boss.name}'s ultimate is FULLY CHARGED! Solve now to interrupt!`);
+      }
+    }, 100);
+  }
+
+  function stopBossChargeTelegraph() {
+    state.bossCharging = false;
+    if (state.bossChargeInterval) {
+      clearInterval(state.bossChargeInterval);
+      state.bossChargeInterval = null;
+    }
+    if (dom.bossChargeBox) dom.bossChargeBox.style.display = 'none';
+  }
+
+  // ANIME CUT-IN PRESENTATION
+  function triggerAnimeCutIn(mainText = '⚡ CRITICAL FOCUS! ⚡', subText = 'TEGAS OVERDRIVE STRIKE') {
+    if (!dom.animeCutin) return;
+    window.SoundEngine.playCutIn();
+    if (dom.cutinTextMain) dom.cutinTextMain.textContent = mainText;
+    if (dom.cutinTextSub) dom.cutinTextSub.textContent = subText;
+    if (dom.cutinSvgBox && window.SvgAssets) {
+      dom.cutinSvgBox.innerHTML = window.SvgAssets.getCutInEyesSvg();
+    }
+    dom.animeCutin.style.display = 'flex';
+    setTimeout(() => {
+      dom.animeCutin.style.display = 'none';
+    }, 650);
+  }
+
+  // ARCADE COMBO CALLOUT STAMP
+  function triggerArcadeComboCallout(combo) {
+    if (combo < 2 || !dom.arcadeComboCallout || !dom.arcadeComboBadge) return;
+    let text = 'GOOD!';
+    let cls = 'stamp-good';
+    let soundLevel = 'good';
+
+    if (combo === 2) {
+      text = 'GOOD!';
+      cls = 'stamp-good';
+      soundLevel = 'good';
+    } else if (combo === 3) {
+      text = 'SUPER!';
+      cls = 'stamp-super';
+      soundLevel = 'super';
+    } else if (combo === 4) {
+      text = 'HYPER!';
+      cls = 'stamp-hyper';
+      soundLevel = 'hyper';
+    } else {
+      text = '🔥 GODLIKE!';
+      cls = 'stamp-godlike';
+      soundLevel = 'godlike';
+    }
+
+    dom.arcadeComboBadge.textContent = text;
+    dom.arcadeComboBadge.className = `arcade-stamp ${cls}`;
+    dom.arcadeComboCallout.style.display = 'block';
+
+    window.SoundEngine.playComboFanfare(soundLevel);
+
+    setTimeout(() => {
+      dom.arcadeComboCallout.style.display = 'none';
+    }, 750);
+  }
+
+  // QUICK-TIME EVENT (QTE) MEGA-CRIT STRIKE
+  function triggerQteSequence(callback) {
+    state.qteActive = true;
+    if (dom.qteContainer) dom.qteContainer.style.display = 'block';
+
+    const hasOverclock = hasRelic('overclock_coil');
+    const zoneWidth = hasOverclock ? 26 : 16;
+    const zoneLeft = (100 - zoneWidth) / 2;
+    if (dom.qteZoneCrit) {
+      dom.qteZoneCrit.style.width = `${zoneWidth}%`;
+      dom.qteZoneCrit.style.left = `${zoneLeft}%`;
+    }
+
+    let pos = 0;
+    let dir = 2.4;
+    state.qtePos = 0;
+
+    const qteTimer = setInterval(() => {
+      pos += dir;
+      if (pos >= 100) {
+        pos = 100;
+        dir = -2.4;
+      } else if (pos <= 0) {
+        pos = 0;
+        dir = 2.4;
+      }
+      state.qtePos = pos;
+      if (dom.qteCursor) dom.qteCursor.style.left = `${pos}%`;
+    }, 16);
+
+    const finishQte = (hitSweetSpot) => {
+      if (!state.qteActive) return;
+      state.qteActive = false;
+      clearInterval(qteTimer);
+      if (dom.qteContainer) dom.qteContainer.style.display = 'none';
+
+      if (hitSweetSpot) {
+        state.isMegaCrit = true;
+        window.SoundEngine.playQteMegaCrit();
+        triggerAnimeCutIn('⚡ MEGA CRITICAL! ⚡', 'PERFECT CALCULATION TIMING!');
+        screenShake('heavy');
+      } else {
+        state.isMegaCrit = false;
+        window.SoundEngine.playQteHit();
+      }
+
+      callback();
+    };
+
+    const autoTimeout = setTimeout(() => {
+      finishQte(false);
+    }, 1400);
+
+    state.onQteHit = () => {
+      clearTimeout(autoTimeout);
+      const isInside = (state.qtePos >= zoneLeft && state.qtePos <= (zoneLeft + zoneWidth));
+      finishQte(isInside);
+    };
+  }
+
+  // SEAMLESS IN-ARENA COMBAT FLOW (KILL THE MODAL)
   function handleSelectSpell(spellType) {
     if (state.isTurnLocked) return;
     window.SoundEngine.playBlip();
@@ -497,42 +1002,66 @@ const GameApp = (() => {
 
     if (!question) return;
     state.currentQuestion = question;
-    openQuestionModal(question);
+    openInArenaConsole(question);
   }
 
-  function openQuestionModal(q) {
+  function openInArenaConsole(q) {
     state.isTurnLocked = true;
-    dom.qSpellBadge.textContent = q.spellName;
-    dom.qTopicBadge.textContent = `TOPIC: ${q.topic.toUpperCase()}`;
-    dom.qPrompt.textContent = q.prompt;
 
-    dom.qHintBox.style.display = 'none';
-    dom.qHintText.textContent = q.hint;
+    // Switch action deck to In-Arena Options
+    if (dom.deckSpellGrid) dom.deckSpellGrid.style.display = 'none';
+    if (dom.deckMathOptionsContainer) dom.deckMathOptionsContainer.style.display = 'flex';
+    if (dom.deckTitleText) dom.deckTitleText.textContent = `CASTING: ${q.spellName.toUpperCase()}`;
 
-    dom.qOptionsGrid.innerHTML = '';
-    q.options.forEach((opt, idx) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn-option-choice';
-      btn.innerHTML = `<span class="opt-key">[${['A', 'B', 'C', 'D'][idx]}]</span> <span class="opt-text">${opt}</span>`;
-      btn.addEventListener('click', () => handleOptionChosen(idx));
-      dom.qOptionsGrid.appendChild(btn);
-    });
+    // Show In-Arena Holographic Math Console
+    if (dom.arenaHoloConsole) {
+      dom.arenaHoloConsole.style.display = 'flex';
+      dom.holoSpellTag.textContent = q.spellName;
+      dom.holoPromptText.textContent = q.prompt;
+      dom.holoHintBox.style.display = 'none';
+      dom.holoHintText.textContent = q.hint;
+    }
+
+    // Populate In-Arena Options Buttons
+    if (dom.deckOptionsGrid) {
+      dom.deckOptionsGrid.innerHTML = '';
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-math-opt';
+        const keyLabel = ['1/A', '2/B', '3/C', '4/D'][idx];
+        btn.innerHTML = `<span class="opt-badge-key">[${keyLabel}]</span> <span class="opt-text">${opt}</span>`;
+        btn.addEventListener('click', () => handleOptionChosen(idx));
+        dom.deckOptionsGrid.appendChild(btn);
+      });
+    }
+
+    // Start Boss Doom Cannon charge telegraph
+    startBossChargeTelegraph();
+
+    // Chronos Shard relic check: freeze timer for first 3 seconds
+    const hasChronos = hasRelic('chronos_shard');
+    let timerFrozenSeconds = hasChronos ? 3.0 : 0;
 
     state.allocatedTime = state.isEnraged ? Math.max(6, Math.round(q.timeLimit * 0.8)) : q.timeLimit;
     state.timeRemaining = state.allocatedTime;
-    updateTimerDisplay();
+    updateInArenaTimerDisplay();
 
     if (state.timerInterval) clearInterval(state.timerInterval);
     const startTime = Date.now();
 
     state.timerInterval = setInterval(() => {
       const elapsed = (Date.now() - startTime) / 1000;
-      state.timeRemaining = Math.max(0, state.allocatedTime - elapsed);
-      updateTimerDisplay();
+      if (timerFrozenSeconds > 0 && elapsed < timerFrozenSeconds) {
+        if (dom.holoTimerText) dom.holoTimerText.textContent = `❄️ ${Math.ceil(state.allocatedTime)}s`;
+        return;
+      }
+      const activeElapsed = timerFrozenSeconds > 0 ? (elapsed - timerFrozenSeconds) : elapsed;
+      state.timeRemaining = Math.max(0, state.allocatedTime - activeElapsed);
+      updateInArenaTimerDisplay();
 
       if (state.timeRemaining < state.allocatedTime * 0.35) {
-        dom.qHintBox.style.display = 'block';
+        if (dom.holoHintBox) dom.holoHintBox.style.display = 'block';
       }
 
       if (state.timeRemaining <= 0) {
@@ -541,20 +1070,36 @@ const GameApp = (() => {
         handleTimeOut();
       }
     }, 100);
-
-    dom.questionModal.showModal();
   }
 
-  function updateTimerDisplay() {
+  function updateInArenaTimerDisplay() {
     const pct = (state.timeRemaining / state.allocatedTime) * 100;
-    dom.qTimerBar.style.width = `${pct}%`;
-    dom.qTimerText.textContent = `${Math.ceil(state.timeRemaining)}s`;
+    if (dom.holoTimerBar) dom.holoTimerBar.style.width = `${pct}%`;
+    if (dom.holoTimerText) dom.holoTimerText.textContent = `${Math.ceil(state.timeRemaining)}s`;
 
     if (pct < 30) {
-      dom.qTimerBar.classList.add('urgent');
+      dom.holoTimerBar?.classList.add('urgent');
     } else {
-      dom.qTimerBar.classList.remove('urgent');
+      dom.holoTimerBar?.classList.remove('urgent');
     }
+  }
+
+  function cancelCurrentSpell() {
+    if (state.timerInterval) {
+      clearInterval(state.timerInterval);
+      state.timerInterval = null;
+    }
+    stopBossChargeTelegraph();
+    closeInArenaConsole();
+    state.isTurnLocked = false;
+    logMessage('↩️ Spell casting cancelled. Choose an attack spell!');
+  }
+
+  function closeInArenaConsole() {
+    if (dom.arenaHoloConsole) dom.arenaHoloConsole.style.display = 'none';
+    if (dom.deckMathOptionsContainer) dom.deckMathOptionsContainer.style.display = 'none';
+    if (dom.deckSpellGrid) dom.deckSpellGrid.style.display = 'grid';
+    if (dom.deckTitleText) dom.deckTitleText.textContent = 'SELECT YOUR MATH ATTACK';
   }
 
   function handleOptionChosen(chosenIndex) {
@@ -563,45 +1108,60 @@ const GameApp = (() => {
       clearInterval(state.timerInterval);
       state.timerInterval = null;
     }
+    stopBossChargeTelegraph();
 
     const q = state.currentQuestion;
     const timeTaken = Math.max(0.5, state.allocatedTime - state.timeRemaining);
     const isCorrect = (chosenIndex === q.correctIndex);
     state.totalAnswers++;
 
-    const buttons = dom.qOptionsGrid.querySelectorAll('.btn-option-choice');
-    buttons.forEach((btn, idx) => {
-      btn.disabled = true;
-      if (idx === q.correctIndex) {
-        btn.classList.add('correct');
-      } else if (idx === chosenIndex && !isCorrect) {
-        btn.classList.add('wrong');
-      }
-    });
+    // Highlight chosen button in-arena
+    if (dom.deckOptionsGrid) {
+      const buttons = dom.deckOptionsGrid.querySelectorAll('.btn-math-opt');
+      buttons.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (idx === q.correctIndex) {
+          btn.classList.add('correct');
+        } else if (idx === chosenIndex && !isCorrect) {
+          btn.classList.add('wrong');
+        }
+      });
+    }
 
     setTimeout(() => {
-      dom.questionModal.close();
-      resolveTurnOutcome(isCorrect, timeTaken, q);
-    }, 900);
+      closeInArenaConsole();
+
+      // Trigger QTE Mega-Crit if Critical Strike OR high streak
+      if (isCorrect && (q.type === 'critical' || state.combo >= 2)) {
+        triggerQteSequence(() => {
+          resolveTurnOutcome(isCorrect, timeTaken, q);
+        });
+      } else {
+        resolveTurnOutcome(isCorrect, timeTaken, q);
+      }
+    }, 550);
   }
 
   function handleTimeOut() {
     const q = state.currentQuestion;
     state.totalAnswers++;
+    stopBossChargeTelegraph();
 
-    const buttons = dom.qOptionsGrid.querySelectorAll('.btn-option-choice');
-    buttons.forEach((btn, idx) => {
-      btn.disabled = true;
-      if (idx === q.correctIndex) btn.classList.add('correct');
-    });
+    if (dom.deckOptionsGrid) {
+      const buttons = dom.deckOptionsGrid.querySelectorAll('.btn-math-opt');
+      buttons.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (idx === q.correctIndex) btn.classList.add('correct');
+      });
+    }
 
     logMessage(`⏳ TIME OUT on ${q.spellName}! The math spell dissipated!`);
     window.SoundEngine.playWrong();
 
     setTimeout(() => {
-      dom.questionModal.close();
+      closeInArenaConsole();
       resolveTurnOutcome(false, state.allocatedTime, q);
-    }, 1200);
+    }, 900);
   }
 
   // RESOLVE PLAYER ACTION & ENEMY REACTION
@@ -613,22 +1173,47 @@ const GameApp = (() => {
       state.combo++;
       if (state.combo > state.maxCombo) state.maxCombo = state.combo;
 
-      // TEGAS HYPERCHARGE ACTIVATION (Feature A1: Streak >= 3)
+      // Boss Stagger check: if boss was charging Doom Gauge
+      if (state.bossCharging || (dom.bossChargeBox && dom.bossChargeBox.style.display !== 'none')) {
+        stopBossChargeTelegraph();
+        window.SoundEngine.playStagger();
+        screenShake('heavy');
+        showFloatingText(dom.bossSprite, '⚡ BOSS STAGGERED! ⚡', '#f9e60b');
+        logMessage(`💥 STAGGER! Interrupted ${BOSSES[state.currentBossIdx].name}'s ultimate attack!`);
+      }
+
+      // TEGAS HYPERCHARGE ACTIVATION (Streak >= 3)
       if (state.combo >= 3) {
         if (!state.isHypercharge) {
           state.isHypercharge = true;
           if (dom.battleContainer) dom.battleContainer.classList.add('hypercharge-active');
           if (dom.hyperchargeBanner) dom.hyperchargeBanner.style.display = 'flex';
           window.SoundEngine.playHypercharge();
+          triggerAnimeCutIn('⚡ HYPERCHARGE! ⚡', '1.5x MULTIPLIER ACTIVE');
           screenShake('heavy');
           showFloatingText(dom.heroSprite, '⚡ TEGAS HYPERCHARGE! ⚡', '#f9e60b');
           logMessage('⚡ TEGAS HYPERCHARGE ACTIVE! 1.5x Spell Damage & High-Voltage Rush!');
         }
       }
 
+      // Trigger Arcade Combo Callout (GOOD, SUPER, HYPER, GODLIKE)
+      triggerArcadeComboCallout(state.combo);
+
+      // Relic: Vampiric Equations (+15 HP on correct calculation)
+      if (hasRelic('vampiric_equations')) {
+        state.playerHp = Math.min(state.playerMaxHp, state.playerHp + 15);
+        showFloatingText(dom.heroSprite, '+15 HP VAMPIRIC DRAIN!', '#4ade80');
+      }
+
       const comboMult = 1 + (state.combo - 1) * 0.25;
       const hyperMult = state.isHypercharge ? 1.5 : 1.0;
-      const speedBonus = timeTaken < 3.5 ? 1.3 : 1.0;
+      let speedBonus = timeTaken < 3.5 ? 1.3 : 1.0;
+
+      // Relic: Nanite Edge (+35% extra speed damage)
+      if (hasRelic('nanite_edge') && timeTaken < 3.5) {
+        speedBonus += 0.35;
+      }
+
       let damage = 0;
 
       if (window.SvgAssets) dom.heroSprite.innerHTML = window.SvgAssets.getHeroSprite('cast', 5);
@@ -636,7 +1221,7 @@ const GameApp = (() => {
       if (q.type === 'fireball') {
         window.SoundEngine.playFireball();
         spawnVfx('fireball');
-        damage = Math.round((65 + Math.random() * 20) * comboMult * speedBonus * hyperMult);
+        damage = Math.round((70 + Math.random() * 20) * comboMult * speedBonus * hyperMult);
         applyBossDamage(damage, 'FIRE DAMAGE');
       } else if (q.type === 'shield') {
         window.SoundEngine.playShield();
@@ -650,12 +1235,12 @@ const GameApp = (() => {
       } else if (q.type === 'critical') {
         window.SoundEngine.playLightning();
         spawnVfx('lightning');
-        damage = Math.round((110 + Math.random() * 30) * comboMult * speedBonus * hyperMult);
+        damage = Math.round((115 + Math.random() * 30) * comboMult * speedBonus * hyperMult);
         applyBossDamage(damage, 'CRITICAL ALGEBRA STRIKE');
       } else if (q.type === 'freeze') {
         window.SoundEngine.playCorrect();
         spawnVfx('freeze');
-        damage = Math.round(45 * comboMult * hyperMult);
+        damage = Math.round(50 * comboMult * hyperMult);
         state.isFrozen = true;
         applyBossDamage(damage, 'TIME WARP CHILL');
         logMessage(`❄️ TIME WARP! The boss's circuits are frozen for 1 turn!`);
@@ -696,6 +1281,13 @@ const GameApp = (() => {
   }
 
   function applyBossDamage(damage, attackName) {
+    // QTE Mega-Crit Multiplier check
+    if (state.isMegaCrit) {
+      const critMultiplier = hasRelic('overclock_coil') ? 3.2 : 2.4;
+      damage = Math.round(damage * critMultiplier);
+      state.isMegaCrit = false;
+    }
+
     state.bossHp = Math.max(0, state.bossHp - damage);
     updateBossDisplay();
 
@@ -705,12 +1297,13 @@ const GameApp = (() => {
     dom.bossSprite.classList.add('hurt');
     setTimeout(() => dom.bossSprite.classList.remove('hurt'), 400);
 
-    // BOSS ENRAGED PHASE TRIGGER (Feature A3: HP <= 35%)
+    // BOSS ENRAGED PHASE TRIGGER (HP <= 35%)
     if (state.bossHp > 0 && state.bossHp <= state.bossMaxHp * 0.35 && !state.isEnraged) {
       state.isEnraged = true;
       if (dom.bossSprite) dom.bossSprite.classList.add('boss-enraged');
       if (dom.bossEnrageBanner) dom.bossEnrageBanner.style.display = 'flex';
       window.SoundEngine.playEnrage();
+      triggerAnimeCutIn('⚠️ ENRAGED PHASE! ⚠️', `${BOSSES[state.currentBossIdx].name} OVERCHARGED!`);
       screenShake('heavy');
       showFloatingText(dom.bossSprite, '⚠️ BOSS ENRAGED! ⚠️', '#ea2527');
       logMessage(`⚠️ WARNING: ${BOSSES[state.currentBossIdx].name} is ENRAGED! Attacks boosted by 40% and question timer accelerated!`);
@@ -795,8 +1388,7 @@ const GameApp = (() => {
         state.playerHp = Math.min(state.playerMaxHp, state.playerHp + 45);
         state.playerShield += 15;
         updatePlayerStats();
-        loadBoss(state.currentBossIdx);
-        state.isTurnLocked = false;
+        returnToCastleAfterBoss();
       } else {
         // FINAL BOSS OVERTHROWN: TRANSITION TO DEDICATED VICTORY PAGE!
         showVictoryPage();
@@ -849,6 +1441,8 @@ const GameApp = (() => {
   // =========================================================================
   function showVictoryPage() {
     state.isTurnLocked = true;
+    if (window.CastleEngine) window.CastleEngine.stopLoop();
+    stopBossChargeTelegraph();
     window.SoundEngine.playVictory();
 
     const dda = window.MathEngine.getAiState();
@@ -898,6 +1492,8 @@ const GameApp = (() => {
   // =========================================================================
   function showDefeatPage() {
     state.isTurnLocked = true;
+    if (window.CastleEngine) window.CastleEngine.stopLoop();
+    stopBossChargeTelegraph();
     window.SoundEngine.playWrong();
 
     const currentBoss = BOSSES[state.currentBossIdx];
@@ -1125,7 +1721,13 @@ const GameApp = (() => {
     showVictoryPage,
     showDefeatPage,
     startGame,
-    generateVoucherPreview
+    generateVoucherPreview,
+    addExplorationScore,
+    syncHeroHp,
+    openRelicModal,
+    transitionToBossArena,
+    returnToCastleAfterBoss,
+    updateCastleHud
   };
 })();
 

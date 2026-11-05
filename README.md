@@ -24,8 +24,14 @@ Every turn, players choose an attack spell corresponding to a key mathematical t
 * ⚡ **Critical Strike (`Algebraic Linear Equations`):** Solve for $x$ in linear and quadratic equations ($ax \pm b = c$, variables on both sides) for massive critical strikes.
 * ❄️ **Time Warp (`Pattern Sequences`):** Identify geometric and arithmetic number patterns to freeze the boss for a free turn.
 
-### ⚡ TEGAS Battle Rush & Engagement Mechanics
+### ⚡ TEGAS Battle Rush & Arcade Action Mechanics
 
+* **⚔️ In-Arena Holographic HUD (Zero Interruptions):** Replaced disconnected modal popups with a seamless holographic HUD projected between the Mage and Boss. Calculations occur directly inside the heat of battle with rapid keyboard shortcuts (`1/A`, `2/B`, `3/C`, `4/D`).
+* **⚠️ Boss Doom Gauge & Stagger Interruption:** Bosses charge devastating ultimate attacks (`GLITCH NOVA`, `BINARY CATACLYSM`, `ASYMPTOTE OBLIVION`). Solving equations swiftly shatters the charge gauge, **STAGGERING** the boss and dealing heavy counter-damage.
+* **💥 QTE Timing Strike ("Mega-Crit"):** On critical strikes and high streaks, a moving timing bar appears. Hitting spacebar or tapping within the green zone triggers a **2.5x - 3.5x MEGA CRITICAL** with screen-shattering anime cut-ins.
+* **🥋 Fighting Game Dual-Layer Ghost Health Bars:** Health bars now feature trailing yellow/white ghost bars that drain smoothly after each hit, providing heavy arcade weight.
+* **🔥 Dynamic Arcade Combo Stamps:** Streaks trigger energetic arcade stamps (*GOOD!*, *SUPER!*, *HYPER!*, and *🔥 GODLIKE COGNITION!*) with audio fanfares and screen shakes.
+* **💎 Rogue-lite Cyber Relic Selection:** After each boss round, students choose 1 of 5 permanent computational perks (e.g. *Nanite Edge*, *Kinetic Barrier*, *Overclock Coil*, *Vampiric Equations*, *Chronos Shard*).
 * **⚡ TEGAS Hypercharge Mode (3x+ Streak):** Hitting a 3-answer streak enters high-voltage Hypercharge mode with glowing red/yellow neon borders, screen aura, synthesized soaring arpeggios, and a **1.5x Damage & Score Multiplier**.
 * **⚠️ Boss Enraged Phase (<35% HP):** When a boss's HP drops below 35%, they pulse with a fiery red aura and become Enraged! Boss attack power increases by 40% and question timers accelerate by 20%, building intense climax tension. Defeating an enraged boss awards a +500 Slayer Bonus!
 * **📳 Juicier Haptic & Visual Feedback:** Dynamic multi-axis screen shakes and mobile vibration triggers on attacks, crits, and enrages via `navigator.vibrate`.
